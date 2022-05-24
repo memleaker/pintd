@@ -32,6 +32,11 @@ func TransData(lconn, rconn net.Conn) {
 		rstream = new(Stream)
 	)
 
+	if lstream == nil || rstream == nil {
+		plog.Println("Alloc Stream Failed, Connection Closed.")
+		goto ERR
+	}
+
 	for {
 		_, err = StreamRead(lconn, lstream)
 		if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
@@ -55,7 +60,7 @@ func TransData(lconn, rconn net.Conn) {
 	}
 
 ERR:
-	if err != io.EOF && err != io.ErrClosedPipe {
+	if err != nil && err != io.EOF && err != io.ErrClosedPipe {
 		plog.Println("Error : %s On Redirect Connection from [%s]->[%s] redirect to [%s]->[%s].",
 			err.Error(),
 			lconn.LocalAddr().String(), lconn.RemoteAddr().String(),

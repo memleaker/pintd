@@ -45,21 +45,26 @@ func HandleConn(cfg *config.PintdConfig) {
 
 func AcceptConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitGroup) {
 	var (
-		conns int
+		conns int = 0
 		lconn net.Conn
 		rconn net.Conn
 		err   error
 		ch    = make(chan int)
 	)
 
+	if ch == nil {
+		plog.Println("Alloc Channel Failed, listener closed.")
+		return
+	}
+
 	defer wg.Done()
+	defer listener.listener.Close()
 
 	// Wait Connection coming.
 	for {
 		lconn, err = listener.listener.Accept()
 		if err != nil {
 			plog.Println("Accept Connection Failed %s, listener closed.", err.Error())
-			listener.listener.Close()
 			return
 		}
 
