@@ -11,7 +11,6 @@ Storage Configuations in pintd.ini.
 ```html
 [pintd]
 AppMode = debug                  # debug or release.
-MaxRedirects = 1024              # Maximum Redirect Connections.
 LogFile = /var/log/pintd.log     # log file path.
 
 # parent section
@@ -24,6 +23,7 @@ localaddr  = 0.0.0.0         # listen address (your ip address), like 127.0.0.1,
 localport  = 8888            # listen port
 remoteaddr = 127.0.0.1       # redirect to address.
 remoteport = 80              # redirect to port
+maxredirects = 100           # Maximum Redirect Connections, default 100.
 denyaddrs = 123.34.77.0/24, 127.0.0.1   # deny access to pintd's ip address, split ip address with ','.
 
 [redirect.test2]
