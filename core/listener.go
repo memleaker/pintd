@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+const (
+	CONN_DEC = iota
+)
+
 type Listener struct {
 	listener net.Listener
 }
@@ -41,9 +45,11 @@ func HandleConn(cfg *config.PintdConfig) {
 
 func AcceptConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitGroup) {
 	var (
+		conns int
 		lconn net.Conn
 		rconn net.Conn
 		err   error
+		ch    = make(chan int)
 	)
 
 	defer wg.Done()
@@ -65,6 +71,24 @@ func AcceptConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitGrou
 			continue
 		}
 
+		// check connections number.
+		for loop := true; loop; {
+			select {
+			case cmd := <-ch:
+				if cmd == CONN_DEC {
+					conns--
+				}
+			default:
+				loop = false
+			}
+		}
+
+		if conns >= cfg.MaxRedirects {
+			lconn.Close()
+			plog.Println("Connection Limit to %d, Closed Connection.", cfg.MaxRedirects)
+			continue
+		}
+
 		plog.Println("%s Accept Connection from %s.", lconn.LocalAddr().String(), lconn.RemoteAddr().String())
 
 		// Dial to remote.
@@ -80,10 +104,12 @@ func AcceptConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitGrou
 				continue
 			}
 
+			// Dial Success.
+			conns++
 			plog.Println("Dial to %s Success.", rconn.RemoteAddr().String())
 
 			// handle data.
-			go HandleData(lconn, rconn, cfg)
+			go HandleData(lconn, rconn, ch)
 			break
 		}
 	}

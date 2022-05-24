@@ -5,11 +5,10 @@ import (
 	"io"
 	"net"
 	"os"
-	"pintd/config"
 	"pintd/plog"
 )
 
-func HandleData(lconn, rconn net.Conn, cfg *config.RedirectConfig) {
+func HandleData(lconn, rconn net.Conn, ch chan int) {
 	plog.Println("New Redirect Connection from [%s]->[%s] redirect to [%s]->[%s].",
 		lconn.LocalAddr().String(), lconn.RemoteAddr().String(),
 		rconn.LocalAddr().String(), rconn.RemoteAddr().String())
@@ -22,6 +21,8 @@ func HandleData(lconn, rconn net.Conn, cfg *config.RedirectConfig) {
 	plog.Println("Destory Redirect Connection from [%s]->[%s] redirect to [%s]->[%s].",
 		lconn.LocalAddr().String(), lconn.RemoteAddr().String(),
 		rconn.LocalAddr().String(), rconn.RemoteAddr().String())
+
+	ch <- CONN_DEC
 }
 
 func TransData(lconn, rconn net.Conn) {
