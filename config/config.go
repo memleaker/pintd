@@ -2,6 +2,9 @@ package config
 
 import (
 	"log"
+	"net"
+	"strconv"
+	"strings"
 
 	"gopkg.in/ini.v1"
 )
@@ -61,18 +64,52 @@ func ReadConfig() *PintdConfig {
 		}
 
 		redirect.LocalAddr = section.Key("localaddr").MustString("0.0.0.0")
+		if addr := net.ParseIP(redirect.LocalAddr); addr == nil {
+			log.Fatalln("Invalid Addr : ", redirect.LocalAddr)
+		}
+
 		redirect.LocalPort = section.Key("localport").MustInt(8888)
+		if redirect.LocalPort < 0 || redirect.LocalPort > 65535 {
+			log.Fatalln("Invalid Port : ", redirect.LocalPort)
+		}
+
 		redirect.RemoteAddr = section.Key("remoteaddr").MustString("127.0.0.1")
+		if addr := net.ParseIP(redirect.RemoteAddr); addr == nil {
+			log.Fatalln("Invalid Addr : ", redirect.RemoteAddr)
+		}
+
 		redirect.RemorePort = section.Key("remoteport").MustInt(9999)
+		if redirect.RemorePort < 0 || redirect.RemorePort > 65535 {
+			log.Fatalln("Invalid Port : ", redirect.RemorePort)
+		}
+
 		redirect.SectionName = section.Name()
+
 		redirect.Protocol = section.Key("proto").MustString("tcp")
+		if redirect.Protocol != "tcp" && redirect.Protocol != "udp" {
+			log.Fatalln("Invalid Protocol : ", redirect.Protocol)
+		}
+
 		redirect.MaxRedirects = section.Key("maxredirects").MustInt(100)
+
 		redirect.Denyaddr = section.Key("denyaddrs").Strings(",")
+		for _, addr := range redirect.Denyaddr {
+			before, after, ok := strings.Cut(addr, "/")
+			if ok {
+				addr = before
+				mask, _ := strconv.Atoi(after)
+				if mask <= 0 || mask > 32 {
+					log.Fatalln("Invalid Mask : ", after)
+				}
+			}
+
+			if ip := net.ParseIP(addr); ip == nil {
+				log.Fatalln("Invalid Addr : ", addr)
+			}
+		}
 
 		Pintdcf.Redirects = append(Pintdcf.Redirects, redirect)
 	}
-
-	// todo CheckConfig
 
 	return &Pintdcf
 }
