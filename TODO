@@ -1,3 +1,2 @@
-1. Usage is too simple.
-2. Performance, Select Read or Write Timeout Value.
-3. Add some arguments when pintd start.
+1. Improve performance, select read or write timeout value.
+2. More test for using UDP, because it may have some bugs.

@@ -34,7 +34,7 @@ type RedirectConfig struct {
 }
 
 // read pintd and indirect config.
-func ReadConfig() *PintdConfig {
+func ReadConfig(cfgfile string) *PintdConfig {
 	var Pintdcf PintdConfig
 
 	Pintdcf.Redirects = make([]*RedirectConfig, 0)
@@ -42,10 +42,12 @@ func ReadConfig() *PintdConfig {
 		log.Fatalln("Alloc structure []RedirectConfig Failed.")
 	}
 
-	cf, err := ini.Load(CONFIGFILE)
+	cf, err := ini.Load(cfgfile)
 	if err != nil {
 		log.Fatalln("Read Config Failed :", err.Error())
 	}
+
+	log.Println("Using Config File", cfgfile)
 
 	// read pintd config.
 	Pintdcf.AppMode = cf.Section("pintd").Key("AppMode").In("debug", []string{"debug", "release"})

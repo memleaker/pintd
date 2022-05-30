@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"pintd/config"
 	"pintd/core"
 	"pintd/filter"
@@ -8,8 +9,13 @@ import (
 )
 
 func main() {
+
+	cfgfile := flag.String("c", config.CONFIGFILE, "use -c to specific [config file]")
+
+	flag.Parse()
+
 	// read config.
-	cfg := config.ReadConfig()
+	cfg := config.ReadConfig(*cfgfile)
 
 	// init log module.
 	plog.InitLog(cfg.LogFile)
