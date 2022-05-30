@@ -21,5 +21,5 @@ func main() {
 	core.CreateListener(cfg)
 
 	// listen and running...
-	core.HandleConn(cfg)
+	core.HandleConns(cfg)
 }

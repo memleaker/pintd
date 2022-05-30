@@ -16,11 +16,11 @@ type Stream struct {
 	buffer [BUFFERSZ]byte
 }
 
-func StreamRead(conn net.Conn, stream *Stream) (int, error) {
+func StreamRead(conn net.Conn, stream *Stream, dur time.Duration) (int, error) {
 	var num int = 0
 
 	for stream.Tail != BUFFERSZ {
-		if err := conn.SetReadDeadline(time.Now().Add(time.Microsecond * time.Duration(500))); err != nil {
+		if err := conn.SetReadDeadline(time.Now().Add(dur)); err != nil {
 			plog.Println("Set ReadDeadline Failed %s.", err.Error())
 			return 0, nil
 		}
@@ -40,7 +40,7 @@ func StreamRead(conn net.Conn, stream *Stream) (int, error) {
 	return num, nil
 }
 
-func StreamWrite(conn net.Conn, stream *Stream) (int, error) {
+func StreamWrite(conn net.Conn, stream *Stream, dur time.Duration) (int, error) {
 	var num int = 0
 
 	if stream.Tail == 0 {
@@ -48,7 +48,7 @@ func StreamWrite(conn net.Conn, stream *Stream) (int, error) {
 	}
 
 	for stream.Head != stream.Tail {
-		if err := conn.SetWriteDeadline(time.Now().Add(time.Microsecond * time.Duration(500))); err != nil {
+		if err := conn.SetWriteDeadline(time.Now().Add(dur)); err != nil {
 			plog.Println("Set WriteDeadline Failed %s.", err.Error())
 			return 0, nil
 		}

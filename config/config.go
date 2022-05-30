@@ -23,6 +23,7 @@ type RedirectConfig struct {
 	LocalPort    int
 	RemorePort   int
 	MaxRedirects int
+	Protocol     string
 	LocalAddr    string
 	RemoteAddr   string
 	SectionName  string
@@ -64,6 +65,7 @@ func ReadConfig() *PintdConfig {
 		redirect.RemoteAddr = section.Key("remoteaddr").MustString("127.0.0.1")
 		redirect.RemorePort = section.Key("remoteport").MustInt(9999)
 		redirect.SectionName = section.Name()
+		redirect.Protocol = section.Key("proto").MustString("tcp")
 		redirect.MaxRedirects = section.Key("maxredirects").MustInt(100)
 		redirect.Denyaddr = section.Key("denyaddrs").Strings(",")
 

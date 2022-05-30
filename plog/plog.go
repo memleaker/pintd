@@ -25,6 +25,7 @@ func Println(format string, a ...any) {
 }
 
 func Fatalln(format string, a ...any) {
-	plog.Output(2, fmt.Sprintf(format, a...))
-	os.Exit(1)
+	s := fmt.Sprintf(format, a...)
+	plog.Output(2, s)
+	log.Fatalln(s)
 }
