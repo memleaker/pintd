@@ -11,6 +11,7 @@ import (
 )
 
 var conns map[string]chan *Dgram = make(map[string]chan *Dgram)
+var mutex sync.Mutex
 
 func HandleUdpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitGroup) {
 	if conns == nil {
@@ -22,7 +23,10 @@ func HandleUdpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 	defer listener.udpconn.Close()
 	defer func() {
 		for _, v := range conns {
-			v <- nil
+			select {
+			case v <- nil:
+			default:
+			}
 		}
 	}()
 
@@ -42,7 +46,9 @@ func HandleUdpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 		}
 
 		// Dial To remote or always dialed.
+		mutex.Lock()
 		ch, ok := conns[addr.String()]
+		mutex.Unlock()
 		if !ok {
 			// DialUDP will not blocking. because no communication with remote.
 			co, err := net.DialUDP("udp", nil, &net.UDPAddr{
@@ -54,18 +60,24 @@ func HandleUdpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 				continue
 			}
 
-			ch = make(chan *Dgram, 8)
+			ch = make(chan *Dgram, 32)
 			if ch == nil {
 				plog.Println("Alloc Udp Channel Failed!")
 				return
 			}
 
+			mutex.Lock()
 			conns[addr.String()] = ch
+			mutex.Unlock()
 
 			go HandleUdpData(listener.udpconn, addr, co, ch)
 		}
 
-		ch <- dgram
+		// using select because ch <- xx may blocking.
+		select {
+		case ch <- dgram:
+		default:
+		}
 	}
 }
 
@@ -85,38 +97,61 @@ func HandleUdpData(lconn *net.UDPConn, laddr *net.UDPAddr, rconn *net.UDPConn, c
 
 func TransUdpData(lconn *net.UDPConn, laddr *net.UDPAddr, rconn *net.UDPConn, ch chan *Dgram) {
 	var (
-		dgram *Dgram
-		err   error
+		dgram   *Dgram
+		err     error
+		n       int
+		bytes   int
+		timeout = time.Now()
 	)
 
 	for {
+		// if no data in five minutes, destory goroutine.
+		if bytes != 0 {
+			bytes = 0
+			timeout = time.Now()
+		} else {
+			dur := time.Now().Sub(timeout)
+			if dur > time.Minute*1 {
+				goto ERR
+			}
+		}
+
 		select {
 		case dgram = <-ch:
 			if dgram == nil {
 				goto ERR
 			}
 
-			_, err = DgramWrite(rconn, dgram, nil)
+			n, err = DgramWrite(rconn, dgram, nil)
 			if err != nil {
 				goto ERR
 			}
 
+			bytes += n
+
 		default:
-			t := time.Now().Add(time.Millisecond * time.Duration(3))
-			_, err = DgramRead(rconn, dgram, &t)
+			t := time.Now().Add(time.Microsecond * time.Duration(1))
+			n, err = DgramRead(rconn, dgram, &t)
 			if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
 				goto ERR
 			}
 
-			_, err = DgramWriteToUdp(lconn, laddr, dgram, nil)
+			bytes += n
+
+			n, err = DgramWriteToUdp(lconn, laddr, dgram, nil)
 			if err != nil {
 				goto ERR
 			}
+
+			bytes += n
 		}
 	}
 
 ERR:
+	mutex.Lock()
 	delete(conns, laddr.String())
+	mutex.Unlock()
+
 	if err != nil {
 		plog.Println("Error : %s On UDP Redirect Connection from [%s]->[%s] redirect to [%s]->[%s].",
 			err.Error(), laddr.String(), lconn.LocalAddr().String(),

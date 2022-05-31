@@ -20,7 +20,7 @@ func HandleTcpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 		lconn net.Conn
 		rconn net.Conn
 		err   error
-		ch    = make(chan int, 16)
+		ch    = make(chan int, cfg.MaxRedirects)
 	)
 
 	if ch == nil {
