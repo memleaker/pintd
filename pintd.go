@@ -18,7 +18,7 @@ func main() {
 	cfg := config.ReadConfig(*cfgfile)
 
 	// init log module.
-	plog.InitLog(cfg.LogFile)
+	plog.InitLog(cfg)
 
 	// init deny rules.
 	filter.AddDenyAddrs(cfg)

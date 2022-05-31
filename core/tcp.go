@@ -124,26 +124,26 @@ func TransTcpData(lconn, rconn net.Conn) {
 	}
 
 	for {
-		_, err = StreamRead(lconn, lstream, time.Microsecond*time.Duration(500))
+		_, err = StreamRead(lconn, lstream, time.Microsecond*time.Duration(1))
 		if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
 			// Send residual data
 			StreamWrite(rconn, lstream, time.Second*time.Duration(30))
 			goto ERR
 		}
 
-		_, err = StreamWrite(rconn, lstream, time.Microsecond*time.Duration(500))
+		_, err = StreamWrite(rconn, lstream, time.Microsecond*time.Duration(1))
 		if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
 			goto ERR
 		}
 
-		_, err = StreamRead(rconn, rstream, time.Microsecond*time.Duration(500))
+		_, err = StreamRead(rconn, rstream, time.Microsecond*time.Duration(1))
 		if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
 			// Send residual data
 			StreamWrite(lconn, rstream, time.Second*time.Duration(30))
 			goto ERR
 		}
 
-		_, err = StreamWrite(lconn, rstream, time.Microsecond*time.Duration(500))
+		_, err = StreamWrite(lconn, rstream, time.Microsecond*time.Duration(1))
 		if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
 			goto ERR
 		}

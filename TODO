@@ -1,2 +1,1 @@
-1. Improve performance, select read or write timeout value.
-2. More test for using UDP, because it may have some bugs.
+1. More test for UDP, because it may have some bugs.
