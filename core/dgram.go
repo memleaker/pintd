@@ -2,66 +2,67 @@ package core
 
 import (
 	"net"
-	"time"
+	"sync"
 )
 
 const (
 	DGRAM_SZ = 65536
+	QUEUE_SZ = 64
 )
 
 type Dgram struct {
-	Len    int
-	buffer [DGRAM_SZ]byte
+	Conn *net.UDPConn
+	Addr *net.UDPAddr
+	Data []byte
 }
 
-func DgramReadFromUdp(conn *net.UDPConn, dgram *Dgram, t *time.Time) (int, *net.UDPAddr, error) {
-	if t != nil {
-		conn.SetReadDeadline(*t)
-	}
-
-	n, addr, err := conn.ReadFromUDP(dgram.buffer[:])
-
-	dgram.Len = n
-
-	return n, addr, err
+type DgramQueue struct {
+	Sem        chan bool
+	GetIndex   int
+	PutIndex   int
+	PutMutex   sync.Mutex
+	GetMutex   sync.Mutex
+	DgramSlice [QUEUE_SZ]Dgram
+	Buffer     [QUEUE_SZ][DGRAM_SZ]byte
 }
 
-func DgramWriteToUdp(conn *net.UDPConn, addr *net.UDPAddr, dgram *Dgram, t *time.Time) (int, error) {
-	if dgram.Len == 0 {
-		return 0, nil
-	}
+func NewDgramQueue() *DgramQueue {
+	var queue DgramQueue
 
-	if t != nil {
-		conn.SetWriteDeadline(*t)
-	}
+	queue.Sem = make(chan bool, QUEUE_SZ)
 
-	n, err := conn.WriteToUDP(dgram.buffer[:dgram.Len], addr)
-
-	return n, err
+	return &queue
 }
 
-func DgramRead(conn *net.UDPConn, dgram *Dgram, t *time.Time) (int, error) {
+func PushDgramToQueue(queue *DgramQueue, buf []byte, n int, conn *net.UDPConn, dstaddr *net.UDPAddr) {
 
-	if t != nil {
-		conn.SetReadDeadline(*t)
-	}
-	n, err := conn.Read(dgram.buffer[:])
+	queue.Sem <- true
 
-	dgram.Len = n
+	queue.PutMutex.Lock()
 
-	return n, err
+	index := queue.PutIndex
+	queue.PutIndex = (queue.PutIndex + 1) % QUEUE_SZ
+
+	queue.PutMutex.Unlock()
+
+	copy(queue.Buffer[index][:], buf[:n])
+
+	queue.DgramSlice[index].Addr = dstaddr
+	queue.DgramSlice[index].Conn = conn
+	queue.DgramSlice[index].Data = queue.Buffer[index][:n]
 }
 
-func DgramWrite(conn *net.UDPConn, dgram *Dgram, t *time.Time) (int, error) {
-	if dgram.Len == 0 {
-		return 0, nil
+func GetDgramFromQueue(queue *DgramQueue) (*net.UDPConn, *net.UDPAddr, []byte) {
+
+	select {
+	case <-queue.Sem:
+		queue.GetMutex.Lock()
+
+		index := queue.GetIndex
+		queue.GetIndex = (queue.GetIndex + 1) % QUEUE_SZ
+
+		queue.GetMutex.Unlock()
+
+		return queue.DgramSlice[index].Conn, queue.DgramSlice[index].Addr, queue.DgramSlice[index].Data
 	}
-
-	if t != nil {
-		conn.SetWriteDeadline(*t)
-	}
-
-	n, err := conn.Write(dgram.buffer[:dgram.Len])
-
-	return n, err
 }
