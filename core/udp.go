@@ -72,7 +72,7 @@ func ReadMultiClient(lconn *net.UDPConn, queue *DgramQueue, dial *net.UDPAddr, c
 			rconn.LocalAddr().String(), rconn.RemoteAddr().String())
 	}
 
-	PushDgramToQueue(queue, buf, n, rconn, dial)
+	PutDgramToQueue(queue, buf, n, rconn, dial)
 
 	return nil
 }
@@ -98,7 +98,7 @@ func ReadMultiServer(lconn *net.UDPConn, queue *DgramQueue, conns *sync.Map) {
 			}
 
 			if !errors.Is(err, os.ErrDeadlineExceeded) {
-				PushDgramToQueue(queue, buf, n, lconn, laddr)
+				PutDgramToQueue(queue, buf, n, lconn, laddr)
 			}
 
 			return true
@@ -109,17 +109,25 @@ func ReadMultiServer(lconn *net.UDPConn, queue *DgramQueue, conns *sync.Map) {
 }
 
 func Write(lconn *net.UDPConn, queue *DgramQueue) {
+	var (
+		err error
+		buf = make([]byte, 65536)
+	)
 
 	for {
 		// we don't need lock, because no race data.
-		conn, addr, data := GetDgramFromQueue(queue)
+		conn, addr, n := GetDgramFromQueue(queue, buf)
 
 		// UDP don't have write buffer, write will not blocking.
 		// if send failed, datadgram is lost.
 		if conn == lconn {
-			conn.WriteToUDP(data, addr) // send left
+			_, err = conn.WriteToUDP(buf[:n], addr) // send left
 		} else {
-			conn.Write(data) // send right
+			_, err = conn.Write(buf[:n]) // send right
+		}
+
+		if err != nil {
+			plog.Println("Write Udp : %s", err.Error())
 		}
 	}
 }
