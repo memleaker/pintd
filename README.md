@@ -1,4 +1,4 @@
-[中文README](README-cn)
+[中文README](README-cn.md)
 
 ---
 # pintd
