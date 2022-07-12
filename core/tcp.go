@@ -23,11 +23,6 @@ func HandleTcpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 		ch    = make(chan int, cfg.MaxRedirects)
 	)
 
-	if ch == nil {
-		plog.Println("Alloc Channel Failed, listener closed.")
-		return
-	}
-
 	defer wg.Done()
 	defer listener.listener.Close()
 
@@ -104,7 +99,7 @@ func HandleTcpData(lconn, rconn net.Conn, ch chan int) {
 		lconn.RemoteAddr().String(), lconn.LocalAddr().String(),
 		rconn.LocalAddr().String(), rconn.RemoteAddr().String())
 
-	// channel may blocking, so close connection first.
+	// close connection first.
 	lconn.Close()
 	rconn.Close()
 
@@ -117,11 +112,6 @@ func TransTcpData(lconn, rconn net.Conn) {
 		lstream = new(Stream)
 		rstream = new(Stream)
 	)
-
-	if lstream == nil || rstream == nil {
-		plog.Println("Alloc Stream Failed, Connection Closed.")
-		goto ERR
-	}
 
 	for {
 		_, err = StreamRead(lconn, lstream, time.Microsecond*time.Duration(1))

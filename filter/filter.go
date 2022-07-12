@@ -3,7 +3,6 @@ package filter
 import (
 	"fmt"
 	"pintd/config"
-	"pintd/plog"
 	"strings"
 )
 
@@ -23,19 +22,12 @@ func AddDenyAddrs(cfg *config.PintdConfig) {
 
 // Add Deny address for single redirect config.
 func AddDenyAddr(deny []string, section string) {
-	if denyaddr == nil {
-		plog.Fatalln("Alloc denyaddr Failed.")
-	}
-
-	if denyaddr[section] = make([]Addr, 0); denyaddr[section] == nil {
-		plog.Fatalln("Alloc denyaddr[%s] Failed.", section)
-	}
+	denyaddr[section] = make([]Addr, 0)
 
 	for _, addr := range deny {
 		ip, mask := ParseIpAddr(addr)
 		denyaddr[section] = append(denyaddr[section], Addr{ip, mask})
 	}
-
 }
 
 // filter address, if matched return true, if no matched return false.

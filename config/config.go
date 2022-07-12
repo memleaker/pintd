@@ -38,9 +38,6 @@ func ReadConfig(cfgfile string) *PintdConfig {
 	var Pintdcf PintdConfig
 
 	Pintdcf.Redirects = make([]*RedirectConfig, 0)
-	if Pintdcf.Redirects == nil {
-		log.Fatalln("Alloc structure []RedirectConfig Failed.")
-	}
 
 	cf, err := ini.Load(cfgfile)
 	if err != nil {
