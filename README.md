@@ -1,3 +1,6 @@
+[中文README](README-cn)
+
+---
 # pintd
 
 A tcp udp port redirector.
@@ -9,36 +12,52 @@ pintd -h            Show Help Message.
 pintd -c xxx        Specific Config File, Default pintd.ini.
 ```
 
-## Config
+## Configuation
 
 Configuation file is ini format.
 
 ### Example
 
+example config file : [example](pintd.ini)
+
+#### global section. (Must Option)
+
 ```html
-[pintd]                          # global configuation. (Must Option).
-AppMode = debug                  # debug or release.    (Must Option).
-LogFile = /var/log/pintd.log     # log file path.       (Default /var/log/pintd.log).
+[pintd]        
 
-# parent section
-[redirect]                       # redirect configuation. (Must Option).
+# debug or release mode. (Must Option).                  
+AppMode = debug         
 
-# child section named 'test'.
-# For This Configuation, If you access port 8888 of the pintd server, pintd will redirect connection to 127.0.0.1:80.
-[redirect.test]              # child section 'test' belong to parent section 'redirect'
-proto = tcp                  # protocol, support tcp and udp. (Default tcp).
-localaddr  = 0.0.0.0         # listening address of pintd. (your ip address, Default 0.0.0.0)
-localport  = 8888            # listening port of pintd. (Default 8888).
-remoteaddr = 127.0.0.1       # redirected address. (Default 127.0.0.1).
-remoteport = 80              # redirected port. (Default 80).
-maxredirects = 100           # Maximum Redirect Connections, (Default 100. Only Valid for tcp).
-denyaddrs = 123.34.77.0/24, 127.0.0.1   # deny access to pintd's ip address. (split ip address with ',').
+# log file path. (default "/var/log/pintd.log").         
+LogFile = /var/log/pintd.log     
+```
 
-# child section named 'test2'.
-[redirect.test2]
-proto = udp                  # protocol udp.
-localaddr  = 0.0.0.0
-localport  = 9999
-remoteaddr = 127.0.0.1
-remoteport = 9090
+#### redirect section
+
+```html
+[redirect]
+
+# config section named 'test'.
+[redirect.test]
+
+# protocol, support tcp and udp. (Default tcp)
+proto = tcp                  
+
+# listening address of pintd. (Default 0.0.0.0)
+localaddr  = 0.0.0.0         
+
+# listening port of pintd. (Default 8888)
+localport  = 8888     
+
+# redirected address. (Default 127.0.0.1).
+remoteaddr = 127.0.0.1    
+
+# redirected port. (Default 80).
+remoteport = 80       
+
+# Maximum Redirect Connections, (Default 100. Only Valid for tcp).
+maxredirects = 100    
+
+# blacklist for deny some ip address to access pintd. (split ip address with ',').
+denyaddrs = 123.34.77.0/24, 127.0.0.1
 ```
