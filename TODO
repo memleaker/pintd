@@ -1,1 +1,5 @@
 1. More Test.
+2. Support White list.
+3. Support Reload Config.
+4. Panic Handle, close connections and output error message to log when panic occurs.
+5. Output more verbose message on debug mode, like output redirect config.
