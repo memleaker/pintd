@@ -3,9 +3,8 @@ package main
 import (
 	"flag"
 	"pintd/config"
-	"pintd/core"
-	"pintd/filter"
 	"pintd/plog"
+	"pintd/router"
 )
 
 func main() {
@@ -21,11 +20,15 @@ func main() {
 	plog.InitLog(cfg)
 
 	// init deny rules.
-	filter.AddDenyAddrs(cfg)
+	//filter.AddDenyAddrs(cfg)
 
 	// create listener.
-	core.CreateListener(cfg)
+	//core.CreateListener(cfg)
 
 	// listen and running...
-	core.HandleConns(cfg)
+	//core.HandleConns(cfg)
+
+	r := router.InitRouter()
+
+	r.Run(":8888")
 }
