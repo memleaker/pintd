@@ -12,7 +12,10 @@
   <link rel="stylesheet" href="layui/css/layui.css">
 
   <!-- 引入 核心JS文件 layui.js -->
-<script src="layui/layui.js"></script>
+  <script src="layui/layui.js"></script>
+
+  <!-- index.js中引入了要使用的layui模块以及实现了点击导航栏，创建和切换选项卡的功能 -->
+  <script src="static/js/index.js"></script>
 
 </head>
 
@@ -38,30 +41,40 @@
           <!-- class 的leftdaohang, data-url, mytitle, myid 都是点击导航栏时创建或切换选项卡必备的属性 -->
           <!-- 注意myid千万不能相同 -->
           <!-- 点击时不需要切换页面的导航栏不需要配置这些 -->
-          <dl class="layui-nav-child leftdaohang" data-url="static/html/indirect_config.html"
-              mytitle="端口重定向配置" myid="1111">
-            <dd ><a>管理配置</a></dd>
+          <dl class="layui-nav-child leftdaohang" data-url="static/html/indirect_config_new.html"
+              mytitle="新增端口重定向配置" myid="1001">
+            <dd ><a>新增配置</a></dd>
+          </dl>
+
+          <dl class="layui-nav-child leftdaohang" data-url="static/html/indirect_config_show.html"
+              mytitle="查看端口重定向配置" myid="1002">
+            <dd ><a>查看配置</a></dd>
           </dl>
         </li>
         
         <!-- 3. 内网穿透 -->
         <li class="layui-nav-item">
           <a>内网穿透</a>
-          <dl class="layui-nav-child leftdaohang" data-url="static/html/intranet_config.html"
-              mytitle="内网穿透配置" myid="1112">
-            <dd><a>管理配置</a></dd>
+          <dl class="layui-nav-child leftdaohang" data-url="static/html/intranet_config_new.html"
+              mytitle="新增内网穿透配置" myid="2001">
+            <dd><a>新增配置</a></dd>
+          </dl>
+
+          <dl class="layui-nav-child leftdaohang" data-url="static/html/intranet_config_show.html"
+              mytitle="查看内网穿透配置" myid="2002">
+              <dd><a>查看配置</a></dd>
           </dl>
         </li>
 
         <!-- 4. 运行状态 -->
         <li class="layui-nav-item leftdaohang" data-url="static/html/running_state.html"
-            mytitle="运行状态" myid="1113">
+            mytitle="运行状态" myid="3001">
           <a>运行状态</a>
         </li>
 
         <!-- 5. 日志相关 -->
         <li class="layui-nav-item leftdaohang" data-url="static/html/logging.html"
-            mytitle="日志相关" myid="1114">
+            mytitle="日志相关" myid="4001">
             <a>日志相关</a>
         </li>
       </ul>
@@ -77,10 +90,6 @@
   </div>
 
 </div>
-
-<!-- index.js中引入了要使用的layui模块以及实现了点击导航栏，创建和切换选项卡的功能
-    此js最好放在最下面 -->
-<script src="static/js/index.js"></script>
 
 </body>
 </html>

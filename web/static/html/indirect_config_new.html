@@ -1,0 +1,144 @@
+<!-- 新增端口重定向配置主页 -->
+<!DOCTYPE html>
+<html>
+
+<!--------------------------------------- Head ------------------------------------>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <title>Indirect Config</title>
+
+    <!-- 引入核心CSS文件 layui.css -->
+    <link rel="stylesheet" href="../../layui/css/layui.css">
+
+    <!-- 引入 核心JS文件 layui.js -->
+    <script src="../../layui/layui.js"></script>
+
+    <!-- 引入本HTML用到的JS -->
+    <script scr="../js/indirect_config_new.js"></script>
+</head>
+
+<!--------------------------------------- Body ------------------------------------>
+<body class="layui-layout-body">
+    <!-- 录入配置 -->
+    <form class="layui-form" action="">
+        <!-- 0. 选择协议 -->
+        <div class="layui-form-item">
+            <label class="layui-form-label">协议</label>
+            <div class="layui-input-inline">
+                <select name="protocol" lay-verify="required">
+                    <option value="">选择协议</option>
+                    <option value="101" selected>TCP</option>
+                    <option value="102">UDP</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 两个配置为一行 -->
+        <hr>
+        <div class="layui-form-item">
+            <!-- 1. 监听地址 -->
+            <div class="layui-inline">
+                <label class="layui-form-label">监听地址</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="listen-addr" required lay-verify="required"
+                        placeholder="请输入Pintd监听的地址" class="layui-input" autocomplete="yes">
+                </div>
+            </div>
+
+            <!-- 2. 监听端口 -->
+            <div class="layui-inline">
+                <label class="layui-form-label">监听端口</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="listen-port" required lay-verify="required"
+                            placeholder="请输入Pintd监听的端口" class="layui-input" autocomplete="yes">
+                </div>
+            </div>
+        </div>
+
+        <!-- 两个配置为一行 -->
+        <div class="layui-form-item">
+            <!-- 3. 目的地址 -->
+            <div class="layui-inline">
+                <label class="layui-form-label">目的地址</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="dest-addr" required lay-verify="required"
+                            placeholder="请输入Pintd转发的目的地址" class="layui-input" autocomplete="yes">
+                </div>
+            </div>
+
+            <!-- 4. 目的端口 -->
+            <div class="layui-inline">
+                <label class="layui-form-label">目的端口</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="dest-port" required lay-verify="required"
+                            placeholder="请输入Pintd转发的目的端口" class="layui-input" autocomplete="yes">
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 黑名单 -->
+        <!-- 5.1 单选框 -->
+        <hr>
+        <div class="layui-form-item">
+            <label class="layui-form-label">访问控制</label>
+            <div class="layui-input-block">
+                <input type="radio" name="acl" value="blacklist" title="黑名单">
+                <input type="radio" name="acl" value="whitelist" title="白名单">
+                <input type="radio" name="acl" value="disabled" title="禁用" checked>
+            </div>
+        </div>
+        
+        <!-- 5.2 输入框 -->
+        <div class="layui-form-item">
+            <label class="layui-form-label">黑名单</label>
+            <div class="layui-input-block">
+                <input type="text" name="deny-addr" placeholder="请输入禁止使用本条配置的网段或IP地址, 以逗号分割。(若选中白名单及禁用, 则本配置无效)"
+                       class="layui-input" autocomplete="no">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">白名单</label>
+            <div class="layui-input-block">
+                <input type="text" name="admit-addr" placeholder="请输入允许使用本条配置的网段或IP地址, 以逗号分割。(若选中黑名单及禁用, 则本配置无效)"
+                    class="layui-input" autocomplete="no">
+            </div>
+        </div>
+
+        <!-- 6. 最大连接数 -->
+        <hr>
+        <div class="layui-form-item">
+            <label class="layui-form-label">最大连接数</label>
+            <div class="layui-input-inline">
+                <input type="text" name="amax-conns" placeholder="本条配置允许的最大连接数"
+                    class="layui-input" autocomplete="no" required lay-verify="required">
+            </div>
+        </div>
+
+        <!-- 7. 备注 -->
+        <hr>
+        <div class="layui-form-item">
+            <label class="layui-form-label">备注信息</label>
+            <div class="layui-input-block">
+                <textarea name="memo" placeholder="请输入本条配置的备注(选填)" class="layui-textarea"></textarea>
+            </div>
+        </div>
+
+        <!-- 8. 提交重置 -->
+        <hr>
+        <div class="layui-form-item">
+            <label class="layui-form-label">提交或重置</label>
+            <div class="layui-input-block">
+                <button class="layui-btn layui-btn-normal" lay-submit="" lay-filter="indirect_cfg_new">
+                    <i class="layui-icon layui-icon-addition"></i>新增配置
+                </button>
+                <button class="layui-btn layui-btn-normal" type="reset">
+                    <i class="layui-icon layui-icon-refresh-1">重置</i>
+                </button>
+            </div>
+        </div>
+    </form>
+</body>
+</html>
