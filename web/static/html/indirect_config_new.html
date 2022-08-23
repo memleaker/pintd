@@ -16,7 +16,7 @@
     <script src="../../layui/layui.js"></script>
 
     <!-- 引入本HTML用到的JS -->
-    <script scr="../js/indirect_config_new.js"></script>
+    <script src="../js/indirect_config_new.js"></script>
 </head>
 
 <!--------------------------------------- Body ------------------------------------>
@@ -28,7 +28,7 @@
             <label class="layui-form-label">协议</label>
             <div class="layui-input-inline">
                 <select name="protocol" lay-verify="required">
-                    <option value="">选择协议</option>
+                    <option value="100">选择协议</option>
                     <option value="101" selected>TCP</option>
                     <option value="102">UDP</option>
                 </select>
@@ -51,7 +51,7 @@
             <div class="layui-inline">
                 <label class="layui-form-label">监听端口</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="listen-port" required lay-verify="required"
+                    <input type="number" name="listen-port" required lay-verify="required"
                             placeholder="请输入Pintd监听的端口" class="layui-input" autocomplete="yes">
                 </div>
             </div>
@@ -72,7 +72,7 @@
             <div class="layui-inline">
                 <label class="layui-form-label">目的端口</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="dest-port" required lay-verify="required"
+                    <input type="number" name="dest-port" required lay-verify="required"
                             placeholder="请输入Pintd转发的目的端口" class="layui-input" autocomplete="yes">
                 </div>
             </div>
@@ -112,7 +112,7 @@
         <div class="layui-form-item">
             <label class="layui-form-label">最大连接数</label>
             <div class="layui-input-inline">
-                <input type="text" name="amax-conns" placeholder="本条配置允许的最大连接数"
+                <input type="number" name="max-conns" placeholder="本条配置允许的最大连接数"
                     class="layui-input" autocomplete="no" required lay-verify="required">
             </div>
         </div>
@@ -131,7 +131,7 @@
         <div class="layui-form-item">
             <label class="layui-form-label">提交或重置</label>
             <div class="layui-input-block">
-                <button class="layui-btn layui-btn-normal" lay-submit="" lay-filter="indirect_cfg_new">
+                <button class="layui-btn layui-btn-normal" lay-submit lay-filter="indirect_cfg_new">
                     <i class="layui-icon layui-icon-addition"></i>新增配置
                 </button>
                 <button class="layui-btn layui-btn-normal" type="reset">

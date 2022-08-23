@@ -20,6 +20,9 @@ func InitRouter() *gin.Engine {
 	{
 		// GET
 		router.GET("", api.MainPage)
+
+		// POST
+		router.POST("/indirect/cfg_new", api.IndirectCfgNew)
 	}
 
 	return engine

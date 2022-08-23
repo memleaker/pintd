@@ -36,10 +36,7 @@ layui.use('element', function(){
                         function changeFrameHeight(myid) { \
                           var ifm = document.getElementById(myid); \
                           ifm.height = document.documentElement.clientHeight; \
-                        } \
-                        window.onresize=function() { \
-                          changeFrameHeight(); \
-                        }</script>'
+                        } </script>'
               ,id: myid
             })
             // 切换到当前点击的页面
