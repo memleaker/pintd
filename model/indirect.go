@@ -3,8 +3,6 @@ package model
 // Indirect.
 
 const (
-	TCP          = "101"
-	UDP          = "102"
 	AclWhiteList = "whitelist"
 	AclBlackList = "blacklist"
 	AclDisable   = "disabled"

@@ -33,3 +33,22 @@ func IndirectCfgNew(c *gin.Context) {
 		"msg":     "新建配置成功",
 	})
 }
+
+func IndirectCfgShow(c *gin.Context) {
+	cfg := [1]model.IndirectConfig{{
+		Protocol:   "TCP",
+		ListenAddr: "127.0.0.1",
+		ListenPort: "8888",
+		DestAddr:   "127.0.0.1",
+		DestPort:   "9999",
+		Acl:        "黑名单",
+		AdmitAddr:  "",
+		DenyAddr:   "1.1.1.1",
+		MaxConns:   "100",
+		Memo:       "测试测试"}}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"data": &cfg,
+	})
+}

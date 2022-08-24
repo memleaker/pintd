@@ -7,6 +7,10 @@ layui.use(['form', 'jquery', 'element', 'layer'], function(){
 
     // 点击新增配置
     form.on('submit(indirect_cfg_new)', function(data) {
+        // 显示加载中
+        layer.load();
+
+        // 提交数据到后端
         $.ajax({
             url:"/indirect/cfg_new",  //提交请求的URL
             type:"post",              //请求方式get,post,put,delete等
@@ -15,17 +19,19 @@ layui.use(['form', 'jquery', 'element', 'layer'], function(){
             // result 代表服务端返回的JSON, msg和success为JSON里的字段
             success:function(result) {
                 if (result.success) {
-                    layer.msg(result.msg)  //返回数据成功时弹框
+                    layer.closeAll('loading'); // 关闭加载框
+                    layer.msg(result.msg, {icon: 6});  //返回数据成功时弹框
                 }
                 else {
-                    console.log("failed")
-                    layer.msg(result.msg) //返回数据失败时弹框
+                    layer.closeAll('loading'); // 关闭加载框
+                    layer.msg(result.msg, {icon: 5}); //返回数据失败时弹框
                 }
             },
 
             // 无返回或处理有报错时弹框
             error:function(result){
-                alert("服务器无响应!!!");
+                layer.closeAll('loading'); // 关闭加载框
+                layer.alert('服务器无响应!!!', {icon: 2})
             }
         });
 
