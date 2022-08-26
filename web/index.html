@@ -32,8 +32,11 @@
   <div class="layui-side layui-bg-black">
     <div class="layui-side-scroll">
       <ul class="layui-nav layui-nav-tree">
-        <!-- 1. 主页 -->
-        <li class="layui-nav-item"><a href="">主页</a></li>
+        <!-- 1. 主页, id="mainpage" 是为了加载页面时能主动点击主页，创建选项卡 -->
+        <li class="layui-nav-item leftdaohang layui-this" data-url="/web/static/html/mainpage.html"
+            mytitle="主页" myid="0001" id="mainpage">
+          <a>主页</a>
+        </li>
 
         <!-- 2. 端口重定向 -->
         <li class="layui-nav-item">
@@ -52,19 +55,7 @@
           </dl>
         </li>
         
-        <!-- 3. 内网穿透 -->
-        <li class="layui-nav-item">
-          <a>内网穿透</a>
-          <dl class="layui-nav-child leftdaohang" data-url="/web/static/html/intranet_config_new.html"
-              mytitle="新增内网穿透配置" myid="2001">
-            <dd><a>新增配置</a></dd>
-          </dl>
-
-          <dl class="layui-nav-child leftdaohang" data-url="/web/static/html/intranet_config_show.html"
-              mytitle="查看内网穿透配置" myid="2002">
-              <dd><a>查看配置</a></dd>
-          </dl>
-        </li>
+        <!-- 3. 未来添加内网穿透等更多功能 -->
 
         <!-- 4. 运行状态 -->
         <li class="layui-nav-item leftdaohang" data-url="/web/static/html/running_state.html"
@@ -88,8 +79,6 @@
       <div class="layui-tab-content" style="width:100%; height:100%;"></div>
     </div>
   </div>
-
 </div>
-
 </body>
 </html>

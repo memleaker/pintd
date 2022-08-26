@@ -20,3 +20,14 @@ type IndirectConfig struct {
 	MaxConns   string `json:"max-conns"`
 	Memo       string `json:"memo"`
 }
+
+type IndirectState struct {
+	Protocol     string `json:"protocol"`
+	SrcAddr      string `json:"src-addr"`
+	SrcPort      string `json:"src-port"`
+	DestAddr     string `json:"dest-addr"`
+	DestPort     string `json:"dest-port"`
+	RunningTime  string `json:"running-time"`
+	ForwardFlow  string `json:"forward-flow"`
+	RealTimeFlow string `json:"realtime-flow"`
+}

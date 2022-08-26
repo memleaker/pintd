@@ -1,4 +1,4 @@
-<!-- 二、展示配置块(尾部加删除框) 删除配置询问是否关闭相应的连接， 不关闭也可以在运行状态里面看到的， 运行状态里面可以关闭 -->
+<!-- 展示配置块 删除配置询问是否关闭相应的连接， 不关闭也可以在运行状态里面看到的， 运行状态里面可以关闭 -->
 <!DOCTYPE html>
 <html>
 
@@ -22,8 +22,21 @@
 <!--------------------------------------- Body ------------------------------------>
 <body class="layui-layout-body">
 
-    <table id="indirect_cfg_show"></table>
-    <div id="page"></div>
-</body>
+    <table id="indirect_cfg_show" lay-filter="table"></table>
 
+    <!-- 表格工具栏 -->
+    <script type="text/html" id="toolbar">
+        <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-sm" lay-event="getConnInfo">获取配置五元组</button>
+            <button class="layui-btn layui-btn-sm" lay-event="getWhiteList">获取配置白名单</button>
+            <button class="layui-btn layui-btn-sm" lay-event="getBlackList">获取配置黑名单</button>
+            <button class="layui-btn layui-btn-sm" lay-event="getMemo">获取配置备注</button>
+        </div>
+    </script>
+
+    <!-- 表头工具栏 -->
+    <script type="text/html" id="editbar">
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+</body>
 </html>

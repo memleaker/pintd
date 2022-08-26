@@ -45,10 +45,15 @@ layui.use('element', function(){
       }
     };
 
-    // click 后调用函数
+    // 监听click, 点击后调用函数创建或切换
     $(".leftdaohang").click(function() {
       var type="tabmanage";
       var othis = $(this);
       active[type] ? active[type].call(this, othis) : '';
     });
+
+
+    // 主动调用click, 让其创建mainpage界面，即主页界面
+    // jquery 语法
+    $('#mainpage').click();
 });

@@ -1,1 +1,37 @@
-日志配置
+<!DOCTYPE html>
+<html>
+
+<!--------------------------------------- Head ------------------------------------>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <title>Running State</title>
+
+  <!-- 引入核心CSS文件 layui.css -->
+  <link rel="stylesheet" href="/web/layui/css/layui.css">
+
+  <!-- 引入 核心JS文件 layui.js -->
+  <script src="/web/layui/layui.js"></script>
+
+  <!-- 引入本文件使用的JS文件 -->
+  <script src="/web/static/js/logging.js"></script>
+</head>
+
+<!--------------------------------------- Body ------------------------------------>
+<body class="layui-layout-body">
+    <table id="logging" lay-filter="table"></table>
+  
+       <!-- 表格工具栏 -->
+      <script type="text/html" id="toolbar">
+        <div class="layui-btn-container">
+          <button class="layui-btn layui-btn-sm" lay-event="DelSelected">批量删除选中日志</button>
+      </div>
+      </script>
+  
+      <!-- 表头工具栏 -->
+      <script type="text/html" id="editbar">
+          <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除此日志</a>
+      </script>
+  </body>
+</html>
