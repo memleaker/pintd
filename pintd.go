@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"pintd/config"
+	"pintd/model"
 	"pintd/plog"
 	"pintd/router"
 )
@@ -27,6 +28,9 @@ func main() {
 
 	// listen and running...
 	//core.HandleConns(cfg)
+
+	// initialize database.
+	model.InitDb("/root/Go/pintd/pintd.db")
 
 	r := router.InitRouter()
 

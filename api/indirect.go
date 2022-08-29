@@ -1,9 +1,9 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"pintd/model"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,21 +18,33 @@ func IndirectCfgNew(c *gin.Context) {
 	if err := c.ShouldBindJSON(&cfg); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": 0,
-			"msg":     "错误请求",
+			"msg":     "错误请求格式",
 		})
-
 		return
 	}
 
-	// check values.
-	// 检查输入，消息是否过长
-	// 只需检查协议和本地监听端口是否重复即可, 其他不必
-	fmt.Println(cfg)
+	// check values. 检查长度, IP, 端口
+	if model.RepeatConfig(&cfg) {
+		c.JSON(http.StatusConflict, gin.H{
+			"success": 0,
+			"msg":     "配置已经存在",
+		})
+		return
+	}
 
-	// return.
-	c.JSON(http.StatusOK, gin.H{
-		"success": 1,
-		"msg":     "新建配置成功",
+	// new config.
+	if model.NewIndirectCfg(&cfg) {
+		c.JSON(http.StatusCreated, gin.H{
+			"success": 1,
+			"msg":     "新建配置成功",
+		})
+		return
+	}
+
+	// create failed.
+	c.JSON(http.StatusInternalServerError, gin.H{
+		"success": 0,
+		"msg":     "新建配置失败",
 	})
 }
 
@@ -41,30 +53,24 @@ func IndirectCfgDel(c *gin.Context) {
 }
 
 func IndirectCfgShow(c *gin.Context) {
-	cfg := model.IndirectConfig{
-		Protocol:   "TCP",
-		ListenAddr: "127.0.0.1",
-		ListenPort: "8888",
-		DestAddr:   "127.0.0.1",
-		DestPort:   "9999",
-		Acl:        "黑名单",
-		AdmitAddr:  "",
-		DenyAddr:   "1.1.1.1",
-		MaxConns:   "100",
-		Memo:       "测试测试"}
 
-	// page1
-	cfgs := [10]model.IndirectConfig{cfg, cfg, cfg, cfg, cfg, cfg, cfg, cfg, cfg, cfg}
+	// parse url args.
+	page, _ := strconv.Atoi(c.Query("page"))
+	limit, _ := strconv.Atoi(c.Query("limit"))
+	if page <= 0 || limit <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": 0,
+			"msg":     "错误的请求参数",
+		})
+		return
+	}
 
-	// page2
-	cfgs_pg2 := [10]model.IndirectConfig{cfg, cfg, cfg, cfg, cfg, cfg, cfg, cfg, cfg, cfg}
-
-	// todo 应该解析page参数,返回给客户端第几页
+	cfgs := model.GetIndirectCfg(page, limit)
 
 	c.JSON(http.StatusOK, gin.H{
-		"code":  0,                         // code:0 表示没有错误
-		"count": len(cfgs) + len(cfgs_pg2), // 表示共有多少条
-		"data":  &cfgs,                     // 此处应当解析客户端limit参数, 返回小于等于limit参数个条目
+		"code":  0,         // code:0 表示没有错误
+		"count": len(cfgs), // 表示共有多少条
+		"data":  &cfgs,     // 此处应当解析客户端limit参数, 返回小于等于limit参数个条目
 	})
 }
 

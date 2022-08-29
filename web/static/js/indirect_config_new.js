@@ -15,23 +15,28 @@ layui.use(['form', 'jquery', 'element', 'layer'], function(){
             url:"/indirect/cfg_new",  //提交请求的URL
             type:"post",              //请求方式get,post,put,delete等
             data:JSON.stringify(data.field),          //提交的表单数据
+            dateType:"json",
 
-            // result 代表服务端返回的JSON, msg和success为JSON里的字段
+            // 调用success回调时，result 代表服务端返回的JSON, msg和success为JSON里的字段
+            // success 为返回码200系列时的逻辑
             success:function(result) {
                 if (result.success) {
                     layer.closeAll('loading'); // 关闭加载框
                     layer.msg(result.msg, {icon: 6});  //返回数据成功时弹框
                 }
-                else {
-                    layer.closeAll('loading'); // 关闭加载框
-                    layer.msg(result.msg, {icon: 5}); //返回数据失败时弹框
-                }
             },
 
-            // 无返回或处理有报错时弹框
+            // 调用error 回调时result则不是服务端返回的JSON，而是要更复杂一些
+            // error 为无返回或返回码不为200系列以及其它错误逻辑
             error:function(result){
                 layer.closeAll('loading'); // 关闭加载框
-                layer.alert('服务器无响应!!!', {icon: 2})
+
+                // result.status 标志HTTP状态码，无响应时为0
+                if (result.status == 0) {
+                    layer.alert('服务器无响应!!!', {icon: 2})
+                }else {
+                    layer.msg(result.responseJSON.msg, {icon: 5});
+                }
             }
         });
 
