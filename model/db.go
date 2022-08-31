@@ -37,7 +37,7 @@ func CreateTables() {
 
 	log_tbl := `CREATE TABLE IF NOT EXISTS "log"(
 					"id" INTEGER PRIMARY KEY AUTOINCREMENT,
-					"time" TIMESTAMP NOT NULL DEFAULT (DATETIME('now','localtime')),
+					"time" TIMESTAMP NOT NULL DEFAULT (datetime('now','localtime')),
 					"content" TEXT
 				)`
 

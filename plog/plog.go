@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"pintd/config"
+	"pintd/model"
 )
 
 var logfile *os.File
@@ -31,6 +32,7 @@ func InitLog(cfg *config.PintdConfig) {
 func Println(format string, a ...any) {
 	s := fmt.Sprintf(format, a...)
 	plog.Output(2, s)
+	model.NewLog(s)
 
 	if appmode == 0 {
 		log.Println(s)
@@ -40,5 +42,6 @@ func Println(format string, a ...any) {
 func Fatalln(format string, a ...any) {
 	s := fmt.Sprintf(format, a...)
 	plog.Output(2, s)
+	model.NewLog(s)
 	log.Fatalln(s)
 }

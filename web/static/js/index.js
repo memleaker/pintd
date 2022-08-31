@@ -3,8 +3,9 @@ layui.use('element', function(){
     // tab的切换功能，切换事件监听等，需要依赖element模块
     var $ = layui.jquery
     ,element = layui.element;
-    
-    // 定义对象active,以及函数tabmange, js可通过active[tabmange]来调用函数
+
+    // 1. 监听导航栏点击事件，创建或切换Tab选项卡
+    // 1.1 定义对象active,以及函数tabmange, js可通过active[tabmange]来调用函数
     var active = {
       tabmanage: function() {
         var htmlurl  = $(this).attr('data-url');
@@ -22,13 +23,12 @@ layui.use('element', function(){
         // 判断用户点击的id是否在数组里
         if (arrayobj.indexOf(myid) >= 0) {
             //标签存在,切换到当前点击的页面
-            //changeFrameHeight();
-            element.tabChange('demo', myid);
+            element.tabChange('tabcard', myid);
         } else {
             // 标签不存在，创建标签
             // 为让iframe 自适应高度，加了段js
             // 注意, iframe的id必须是不同的，因此我设置成了myid
-            element.tabAdd('demo', {
+            element.tabAdd('tabcard', {
               title:mytitle
               ,content: '<iframe frameborder="no" onload="changeFrameHeight('+myid+')" id = '+myid+' \
                         style="width:100%;hight:100%;" scrolling="no" src='+htmlurl+'></iframe> \
@@ -40,20 +40,25 @@ layui.use('element', function(){
               ,id: myid
             })
             // 切换到当前点击的页面
-            element.tabChange('demo', myid);
+            element.tabChange('tabcard', myid);
         }
       }
     };
 
-    // 监听click, 点击后调用函数创建或切换
+    // 1.2 监听导航栏的click事件, 点击后调用函数创建或切换
     $(".leftdaohang").click(function() {
       var type="tabmanage";
       var othis = $(this);
       active[type] ? active[type].call(this, othis) : '';
     });
 
+    // 2. 监听选项卡切换事件，设置切换选项卡时，刷新选项卡界面
+    element.on('tab(tabcard)', function (data) {  // tabcard:过滤器值,lay-filter所绑定的
+      var src = $(".layui-tab-item.layui-show").find("iframe").attr("src");
+      $(".layui-tab-item.layui-show").find("iframe").attr("src", src);
+    });
 
-    // 主动调用click, 让其创建mainpage界面，即主页界面
+    // 3. 主动调用click, 让其创建运行状态界面, 这样一打开界面就不是空的了
     // jquery 语法
-    $('#mainpage').click();
+    $('#running_state').click();
 });

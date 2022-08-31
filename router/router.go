@@ -27,7 +27,9 @@ func InitRouter() *gin.Engine {
 		// POST
 		router.POST("/indirect/cfg_new", api.IndirectCfgNew)
 		router.POST("/indirect/cfg_del", api.IndirectCfgDel)
+		router.POST("/indirect/cfg_edit", api.IndirectCfgEdit)
 		router.POST("/logging/del", api.DelLog)
+		router.POST("/logging/delmore", api.DelMoreLog)
 	}
 
 	return engine

@@ -29,16 +29,11 @@
   </div>
 
 <!------------------------------------- 左侧导航栏 --------------------------------->
-  <div class="layui-side layui-bg-black">
-    <div class="layui-side-scroll">
-      <ul class="layui-nav layui-nav-tree">
-        <!-- 1. 主页, id="mainpage" 是为了加载页面时能主动点击主页，创建选项卡 -->
-        <li class="layui-nav-item leftdaohang layui-this" data-url="/web/static/html/mainpage.html"
-            mytitle="主页" myid="0001" id="mainpage">
-          <a>主页</a>
-        </li>
+  <div class="layui-side layui-bg-black" lay-filter="navmon">
+    <div class="layui-side-scroll" lay-filter="navmon">
+      <ul class="layui-nav layui-nav-tree" lay-filter="navmon">
 
-        <!-- 2. 端口重定向 -->
+        <!-- 1. 端口重定向 -->
         <li class="layui-nav-item">
           <a>端口重定向</a>
           <!-- class 的leftdaohang, data-url, mytitle, myid 都是点击导航栏时创建或切换选项卡必备的属性 -->
@@ -55,15 +50,16 @@
           </dl>
         </li>
         
-        <!-- 3. 未来添加内网穿透等更多功能 -->
+        <!-- 2. 未来添加内网穿透等更多功能 -->
 
-        <!-- 4. 运行状态 -->
+        <!-- 3. 运行状态 -->
+        <!-- id="running_state" 是为了加载页面时能主动点击此选项，创建选项卡 -->
         <li class="layui-nav-item leftdaohang" data-url="/web/static/html/running_state.html"
-            mytitle="运行状态" myid="3001">
+            mytitle="运行状态" myid="3001" id="running_state">
           <a>运行状态</a>
         </li>
 
-        <!-- 5. 日志相关 -->
+        <!-- 4. 日志相关 -->
         <li class="layui-nav-item leftdaohang" data-url="/web/static/html/logging.html"
             mytitle="日志相关" myid="4001">
             <a>日志相关</a>
@@ -74,7 +70,7 @@
 
 <!--------------------------------------- 中间主区域 --------------------------------->
   <div class="layui-body">
-    <div class="layui-tab layui-tab-card" lay-filter="demo" lay-allowclose="true">
+    <div class="layui-tab layui-tab-card" lay-filter="tabcard" lay-allowclose="true">
       <ul class="layui-tab-title"></ul>
       <div class="layui-tab-content" style="width:100%; height:100%;"></div>
     </div>

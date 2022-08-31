@@ -86,6 +86,13 @@ layui.use(['table', 'layer'], function() {
                 // 关闭询问弹窗
                 layer.close(index);
 
+                // 减小JSON长度
+                data['deny-addr'] = "";
+                data['admit-addr'] = "";
+                data['memo'] = "";
+
+                console.log(JSON.stringify(data));
+
                 // 显示加载中
                 layer.load();
 
@@ -93,25 +100,27 @@ layui.use(['table', 'layer'], function() {
                 $.ajax({
                     url:"/indirect/cfg_del",
                     type:"post",
-                    data:JSON.stringify(data.field),  //提交的表单数据
+                    data:JSON.stringify(data),  //提交的表单数据
 
                     // result 代表服务端返回的JSON, msg和success为JSON里的字段
                     success:function(result) {
                         if (result.success) {
                             layer.closeAll('loading'); // 关闭加载框
-                            obj.del(); // 删除条目
+                            obj.del();                 // 删除条目
                             layer.msg(result.msg, {icon: 6});  //返回数据成功时弹框
-                        }
-                        else {
-                            layer.closeAll('loading'); // 关闭加载框
-                            layer.msg(result.msg, {icon: 5}); //返回数据失败时弹框
                         }
                     },
         
                     // 无返回或处理有报错时弹框
                     error:function(result){
                         layer.closeAll('loading'); // 关闭加载框
-                        layer.alert('服务器无响应!!!', {icon: 2})
+                        
+                        // result.status 标志HTTP状态码，无响应时为0
+                        if (result.status == 0) {
+                            layer.alert('服务器无响应!!!', {icon: 2})
+                        }else {
+                            layer.msg(result.responseJSON.msg, {icon: 5});
+                        }
                     }
                 });
             });
@@ -132,7 +141,7 @@ layui.use(['table', 'layer'], function() {
         $.ajax({
             url:"/indirect/cfg_edit?field="+field,
             type:"post",
-            data:JSON.stringify(data.field),  //提交的表单数据
+            data:JSON.stringify(data),  //提交的表单数据
 
             // result 代表服务端返回的JSON, msg和success为JSON里的字段
             success:function(result) {
@@ -141,16 +150,18 @@ layui.use(['table', 'layer'], function() {
                     layer.closeAll('loading'); // 关闭加载框
                     layer.msg(result.msg, {icon: 6});  //返回数据成功时弹框
                 }
-                else {
-                    layer.closeAll('loading'); // 关闭加载框
-                    layer.msg(result.msg, {icon: 5}); //返回数据失败时弹框
-                }
             },
 
             // 无返回或处理有报错时弹框
             error:function(result){
                 layer.closeAll('loading'); // 关闭加载框
-                layer.alert('编辑表格失败，服务器无响应!!!', {icon: 2})
+
+                // result.status 标志HTTP状态码，无响应时为0
+                if (result.status == 0) {
+                    layer.alert('编辑表格失败，服务器无响应!!!', {icon: 2})
+                }else {
+                    layer.msg(result.responseJSON.msg, {icon: 5});
+                }
             }
         });
 
