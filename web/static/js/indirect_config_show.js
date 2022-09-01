@@ -165,7 +165,7 @@ layui.use(['table', 'layer'], function() {
             }
         });
 
-        if (!success) {
+        if (success) {
             // 修改失败，界面上修改回旧值, 不能在ajax内部调用此代码
             $(this).val(old);
         }

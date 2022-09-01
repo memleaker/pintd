@@ -79,50 +79,55 @@ layui.use(['table', 'layer'], function() {
         var event = obj.event;
         var arr = checkStatus.data;
 
-        // 保留日志和时间内容会让JSON比较大, 因此将其置位空
-        for (let i = 0; i < arr.length; ++i){
-            arr[i]['content'] = "";
-            arr[i]['time'] = "";
-        }
-
         if (event == "DelSelected") {
             if (arr.length == 0) {
                 layer.msg('未选中任何数据');
                 return
             }
 
-            // 显示加载中
-            layer.load();
+            layer.confirm('确定删除选中的日志吗?', function(index) {
+                // 关闭询问弹窗
+                layer.close(index);
 
-            // 发送请求
-            $.ajax({
-                url:"/logging/delmore?num="+arr.length,
-                type:"post",
-                data:JSON.stringify(arr),  //提交的表单数据
+                // 显示加载中
+                layer.load();
 
-                // result 代表服务端返回的JSON, msg和success为JSON里的字段
-                success:function(result) {
-                    if (result.success) {
-                        layer.closeAll('loading'); // 关闭加载框
-                        // 重新加载表格, 因为选中多个时不好删除
-                        table.reload('logging', {
-                            url:"/logging/get",
-                        });
-                        layer.msg(result.msg, {icon: 6});  //返回数据成功时弹框
-                    }
-                },
-
-                // 无返回或处理有报错时弹框
-                error:function(result){
-                    layer.closeAll('loading'); // 关闭加载框
-                    
-                    // result.status 标志HTTP状态码，无响应时为0
-                    if (result.status == 0) {
-                        layer.alert('服务器无响应!!!', {icon: 2})
-                    }else {
-                        layer.msg(result.responseJSON.msg, {icon: 5});
-                    }
+                // 保留日志和时间内容会让JSON比较大, 因此将其置位空
+                for (let i = 0; i < arr.length; ++i){
+                    arr[i]['content'] = "";
+                    arr[i]['time'] = "";
                 }
+
+                // 发送请求
+                $.ajax({
+                    url:"/logging/delmore?num="+arr.length,
+                    type:"post",
+                    data:JSON.stringify(arr),  //提交的表单数据
+
+                    // result 代表服务端返回的JSON, msg和success为JSON里的字段
+                    success:function(result) {
+                        if (result.success) {
+                            layer.closeAll('loading'); // 关闭加载框
+                            // 重新加载表格, 因为选中多个时不好删除
+                            table.reload('logging', {
+                                url:"/logging/get",
+                            });
+                            layer.msg(result.msg, {icon: 6});  //返回数据成功时弹框
+                        }
+                    },
+
+                    // 无返回或处理有报错时弹框
+                    error:function(result){
+                        layer.closeAll('loading'); // 关闭加载框
+                        
+                        // result.status 标志HTTP状态码，无响应时为0
+                        if (result.status == 0) {
+                            layer.alert('服务器无响应!!!', {icon: 2})
+                        }else {
+                            layer.msg(result.responseJSON.msg, {icon: 5});
+                        }
+                    }
+                });
             });
         }
     });

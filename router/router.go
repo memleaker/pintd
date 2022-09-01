@@ -18,16 +18,21 @@ func InitRouter() *gin.Engine {
 	// router group
 	router := engine.Group("/")
 	{
-		// GET
+		// Index.
 		router.GET("", api.MainPage)
-		router.GET("/indirect/cfg_show", api.IndirectCfgShow)
-		router.GET("/running/state", api.IndirectState)
-		router.GET("/logging/get", api.GetLog)
 
-		// POST
+		// running state.
+		router.GET("/running/state", api.GetIndirectState)
+		router.POST("/running/terminate", api.TerminateConn)
+
+		// indirect.
+		router.GET("/indirect/cfg_show", api.IndirectCfgShow)
 		router.POST("/indirect/cfg_new", api.IndirectCfgNew)
 		router.POST("/indirect/cfg_del", api.IndirectCfgDel)
 		router.POST("/indirect/cfg_edit", api.IndirectCfgEdit)
+
+		// log.
+		router.GET("/logging/get", api.GetLog)
 		router.POST("/logging/del", api.DelLog)
 		router.POST("/logging/delmore", api.DelMoreLog)
 	}

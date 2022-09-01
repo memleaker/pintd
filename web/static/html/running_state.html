@@ -20,21 +20,76 @@
 
 <!--------------------------------------- Body ------------------------------------>
 <body class="layui-layout-body">
+
+  <div style="padding: 20px; background-color: #F2F2F2;">
+    <div class="layui-row layui-col-space15">
+      
+      <!-- 第一个卡片面板, 里面有四个卡片因此设置位md3, 因为总共为md12, 这样一卡片分4个 -->
+      <div class="layui-col-md3">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <h3><b>工作协程数量</b></h3>
+            </div>
+            <div class="layui-card-body">
+                <!-- 当前工作协程数量为: 66 -->
+                <a  id="goroutine_num"></a>
+            </div>
+        </div>
+      </div>
+
+      <!-- 第二个卡片面板 -->
+      <div class="layui-col-md3">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <h3><b>重定向连接数量</b></h3>
+            </div>
+            <div class="layui-card-body">
+                重定向链接数量为: 66
+            </div>
+          </div>
+      </div>
+      
+      <!-- 第三个卡片面板 -->
+      <div class="layui-col-md3">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <h3><b>CPU使用率</b></h3>
+            </div>
+            <div class="layui-card-body">
+                当前进程占用CPU: 66%
+            </div>
+        </div>
+      </div>
+
+      <!-- 第四个卡片面板 -->
+      <div class="layui-col-md3">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <h3><b>内存占用情况</b></h3>
+            </div>
+            <div class="layui-card-body">
+                当前进程使用的内存: 66MB
+            </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- 显示连接，通信是否正常、以及流量统计 -->
   <table id="running_state" lay-filter="table"></table>
 
       <!-- 表格工具栏 -->
       <script type="text/html" id="toolbar">
         <!-- 选择框 -->
-        <div class="layui-inline" style="float:left; height:29px;">
-          <select name="columns">
-            <option value="all">选择列为过滤条件进行搜索</option>
+        <div class="layui-inline" style="float:left;bottom:5px">
+          <select name="columns" id="select_filter">
+            <option value selected disabled>选择搜索过滤条件</option>
             <option value="protocol">协议</option>
             <option value="src-addr">源地址</option>
             <option value="src-port">源端口</option>
             <option value="dest-addr">目的地址</option>
             <option value="dest-port">目的端口</option>
-            <option value="running-time">运行时间</option>
           </select>
         </div>
 
