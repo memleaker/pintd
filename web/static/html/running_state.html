@@ -28,11 +28,11 @@
       <div class="layui-col-md3">
         <div class="layui-card">
             <div class="layui-card-header">
-                <h3><b>工作协程数量</b></h3>
+                <h3><b>工作协程数</b></h3>
             </div>
             <div class="layui-card-body">
-                <!-- 当前工作协程数量为: 66 -->
-                <a  id="goroutine_num"></a>
+			            <div id="goroutine_num" style="color: green;">
+                  </div>
             </div>
         </div>
       </div>
@@ -44,7 +44,8 @@
                 <h3><b>重定向连接数量</b></h3>
             </div>
             <div class="layui-card-body">
-                重定向链接数量为: 66
+              <div id="redirect_conns" style="color: green;">
+              </div>
             </div>
           </div>
       </div>
@@ -53,10 +54,11 @@
       <div class="layui-col-md3">
         <div class="layui-card">
             <div class="layui-card-header">
-                <h3><b>CPU使用率</b></h3>
+                <h3><b>进程占用CPU情况</b></h3>
             </div>
             <div class="layui-card-body">
-                当前进程占用CPU: 66%
+              <div id="cpu_usage" style="color: green;">
+              </div>
             </div>
         </div>
       </div>
@@ -65,10 +67,11 @@
       <div class="layui-col-md3">
         <div class="layui-card">
             <div class="layui-card-header">
-                <h3><b>内存占用情况</b></h3>
+                <h3><b>进程占用内存情况</b></h3>
             </div>
             <div class="layui-card-body">
-                当前进程使用的内存: 66MB
+              <div id="mem_usage" style="color: green;">
+              </div>
             </div>
         </div>
       </div>

@@ -19,7 +19,7 @@ type IndirectState struct {
 }
 
 // 这就不用数据库了
-func GetIndirectState(c *gin.Context) {
+func GetRunningState(c *gin.Context) {
 	state := IndirectState{
 		Id:           1,
 		Protocol:     "TCP",
@@ -56,4 +56,13 @@ func GetIndirectState(c *gin.Context) {
 
 func TerminateConn(c *gin.Context) {
 	// 不但要检验id，还要看五元组是否相同，因为前端有延迟，可能删除错误
+}
+
+func GetRunningInfo(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"goroutine_num":  32,
+		"redirect_conns": 10,
+		"cpu_usage":      "200%",
+		"mem_usage":      "66MB",
+	})
 }

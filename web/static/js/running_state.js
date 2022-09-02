@@ -3,7 +3,29 @@ layui.use(['table', 'layer'], function() {
     var layer = layui.layer;
     var $ = layui.jquery;
 
-    document.getElementById('goroutine_num').value = "hahaha";
+    // 为卡片面板赋值
+    $.ajax({
+        url:"/running/runninginfo",
+        type:"get",
+
+        success:function(result) {
+            // 协程数量
+            var div = document.getElementById("goroutine_num");
+            div.textContent += "当前协程数: " + result.goroutine_num;
+
+            // 连接数量
+            div = document.getElementById("redirect_conns");
+            div.textContent += "当前连接数: " + result.redirect_conns;
+
+            // CPU使用
+            div = document.getElementById("cpu_usage");
+            div.textContent += "进程占用CPU: " + result.cpu_usage;
+            
+            // 内存使用
+            div = document.getElementById("mem_usage");
+            div.textContent += "进程占用内存: " + result.mem_usage;
+        },
+    });
 
     // 加载table实例
     table.render({

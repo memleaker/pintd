@@ -22,7 +22,8 @@ func InitRouter() *gin.Engine {
 		router.GET("", api.MainPage)
 
 		// running state.
-		router.GET("/running/state", api.GetIndirectState)
+		router.GET("/running/state", api.GetRunningState)
+		router.GET("/running/runninginfo", api.GetRunningInfo)
 		router.POST("/running/terminate", api.TerminateConn)
 
 		// indirect.
