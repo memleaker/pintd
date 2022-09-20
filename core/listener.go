@@ -8,10 +8,6 @@ import (
 	"sync"
 )
 
-const (
-	CONN_DEC = iota
-)
-
 type Listener struct {
 	listener net.Listener // for tcp
 	udpconn  *net.UDPConn // for udp

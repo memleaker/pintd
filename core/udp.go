@@ -16,6 +16,8 @@ type ConnInfo struct {
 	Conn *net.UDPConn
 }
 
+// because UDP dont't have connection state. so we cannot know remote is or not closed.
+// and it cause we cannot timely close expire goroutine when using one conn one goroutine model.
 func HandleUdpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer listener.udpconn.Close()

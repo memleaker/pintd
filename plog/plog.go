@@ -9,7 +9,7 @@ import (
 
 var logfile *os.File
 var plog *log.Logger
-var appmode int
+var debug bool
 
 func InitLog(cfg *config.PintdConfig) {
 	var err error
@@ -21,10 +21,8 @@ func InitLog(cfg *config.PintdConfig) {
 
 	plog = log.New(logfile, "", log.Ldate|log.Ltime)
 
-	if cfg.AppMode == "release" {
-		appmode = 1
-	} else {
-		appmode = 0
+	if cfg.AppMode != "release" {
+		debug = true
 	}
 }
 
@@ -32,7 +30,7 @@ func Println(format string, a ...any) {
 	s := fmt.Sprintf(format, a...)
 	plog.Output(2, s)
 
-	if appmode == 0 {
+	if debug {
 		log.Println(s)
 	}
 }
