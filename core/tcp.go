@@ -34,7 +34,7 @@ func HandleTcpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 
 		// filter address
 		ip, _, _ := strings.Cut(lconn.RemoteAddr().String(), ":")
-		if matched := filter.FilterAddr(ip, cfg.SectionName); matched {
+		if deny := filter.DenyAccess(ip, cfg.SectionName); deny {
 			lconn.Close()
 			plog.Println("Matched Deny Address : %s.", ip)
 			continue

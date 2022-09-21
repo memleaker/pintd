@@ -1,5 +1,3 @@
-1. More Test.
-2. Support White list.
-3. Support Reload Config.
-4. Panic Handle, close connections and output error message to log when panic occurs.
-6. Support Domin name.
+1. Support Reload Config.
+2. Panic Handle, close connections and output error message to log when panic occurs.
+3. Support Domin name.

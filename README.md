@@ -1,63 +1,62 @@
-[中文README](README-cn.md)
-
----
 # pintd
 
-A tcp udp port redirector.
+TCP/UDP 端口重定向工具。
 
-## Usage
+## 使用方法
 
 ```shell
-pintd -h            Show Help Message.
-pintd -c xxx        Specific Config File, Default pintd.ini.
+pintd -h            打印帮助信息。
+pintd -c xxx        指定配置文件, 默认为: pintd.ini.
 ```
 
-## Configuation
+## 配置文件
 
-Configuation file is ini format.
+配置文件使用 ini 格式.
 
-### Example
+### 示例
 
-example config file : [example](pintd.ini)
+配置文件示例 : [example](pintd.ini)
 
-#### global section. (Must Option)
+#### 全局配置
 
 ```html
-[pintd]        
+[pintd]             
+# 选择debug或release模式           
+AppMode = debug                  
 
-# debug or release mode. (Must Option).                  
-AppMode = debug         
-
-# log file path. (default "/var/log/pintd.log").         
+# 日志文件路径 (默认为: "/var/log/pintd.log").
 LogFile = /var/log/pintd.log     
 ```
 
-#### redirect section
+#### 重定向配置
 
 ```html
 [redirect]
 
-# config section named 'test'.
+# 命名为test的重定向配置
 [redirect.test]
 
-# protocol, support tcp and udp. (Default tcp)
+# 协议, 可选TCP或UDP. (默认为 tcp)
 proto = tcp                  
 
-# listening address of pintd. (Default 0.0.0.0)
+# pintd监听的IP地址. (默认 0.0.0.0)
 localaddr  = 0.0.0.0         
 
-# listening port of pintd. (Default 8888)
+# pintd监听的端口. (默认 8888)
 localport  = 8888     
 
-# redirected address. (Default 127.0.0.1).
+# 重定向的IP地址. (默认 127.0.0.1).
 remoteaddr = 127.0.0.1    
 
-# redirected port. (Default 80).
+# 重定向的端口. (默认 80).
 remoteport = 80       
 
-# Maximum Redirect Connections, (Default 100. Only Valid for tcp).
+# 最大重定向的连接数 (默认 100. 此项仅对TCP有效).
 maxredirects = 100    
 
-# blacklist for deny some ip address to access pintd. (split ip address with ',').
+# 黑名单，列出的IP将被禁止访问pintd. (使用 ',' 分割IP地址).
 denyaddrs = 123.34.77.0/24, 127.0.0.1
+
+# 白名单, 将只允许列出的IP访问, 允许黑名单和白名单混合使用
+admitaddrs = 221.0.0.0/8, 127.0.0.1
 ```

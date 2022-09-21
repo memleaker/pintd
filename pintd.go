@@ -21,7 +21,7 @@ func main() {
 	plog.InitLog(cfg)
 
 	// init deny rules.
-	filter.AddDenyAddrs(cfg)
+	filter.InitFilter(cfg)
 
 	// create listener.
 	core.CreateListener(cfg)

@@ -5,8 +5,10 @@ import (
 	"net"
 	"os"
 	"pintd/config"
+	"pintd/filter"
 	"pintd/plog"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 )
@@ -28,6 +30,14 @@ func HandleUdpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 		raddr = net.UDPAddr{IP: net.ParseIP(cfg.RemoteAddr), Port: cfg.RemorePort}
 	)
 
+	defer func() {
+		conns.Range(func(key, value any) bool {
+			rconn := value.(ConnInfo).Conn
+			rconn.Close()
+			return false
+		})
+	}()
+
 	// read right multi server data to message queue.
 	go ReadMultiServer(listener.udpconn, queue, &conns)
 
@@ -35,55 +45,59 @@ func HandleUdpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 	go Write(listener.udpconn, queue)
 
 	// read left multi client data to message queue.
-	for {
-		err := ReadMultiClient(listener.udpconn, queue, &raddr, &conns)
-		if err != nil {
-			plog.Println("Error : %s, Udp Listener %s Closed.", err.Error(),
-				listener.udpconn.LocalAddr().String())
-			return
-		}
+	if err := ReadMultiClient(listener.udpconn, queue, &raddr, &conns, cfg); err != nil {
+		plog.Println("Error : %s, Udp Listener %s Closed.", err.Error(),
+			listener.udpconn.LocalAddr().String())
+		return
 	}
 }
 
-func ReadMultiClient(lconn *net.UDPConn, queue *DgramQueue, dial *net.UDPAddr, conns *sync.Map) error {
+func ReadMultiClient(lconn *net.UDPConn, queue *DgramQueue, dial *net.UDPAddr, conns *sync.Map, cfg *config.RedirectConfig) error {
 	var (
 		rconn *net.UDPConn
 		buf   = make([]byte, 65536)
 	)
 
-	n, laddr, err := lconn.ReadFromUDP(buf)
-	if err != nil {
-		return err
-	}
-
-	val, ok := conns.Load(laddr.String())
-	if ok {
-		rconn = val.(ConnInfo).Conn
-	} else {
-		rconn, err = net.DialUDP("udp", nil, dial)
+	for {
+		n, laddr, err := lconn.ReadFromUDP(buf)
 		if err != nil {
-			plog.Println("DialUDP Failed : %s", err.Error())
-			return nil
+			return err
 		}
 
-		conninfo := ConnInfo{Addr: laddr, Conn: rconn}
-		conns.Store(laddr.String(), conninfo)
+		// filter address
+		ip, _, _ := strings.Cut(laddr.String(), ":")
+		if deny := filter.DenyAccess(ip, cfg.SectionName); deny {
+			plog.Println("Matched Deny Address : %s.", ip)
+			continue
+		}
 
-		plog.Println("New UDP Redirect Connection from [%s]->[%s] redirect to [%s]->[%s].",
-			laddr.String(), lconn.LocalAddr().String(),
-			rconn.LocalAddr().String(), rconn.RemoteAddr().String())
+		val, ok := conns.Load(laddr.String())
+		if ok {
+			rconn = val.(ConnInfo).Conn
+		} else {
+			rconn, err = net.DialUDP("udp", nil, dial)
+			if err != nil {
+				plog.Println("DialUDP Failed : %s", err.Error())
+				continue
+			}
+
+			conninfo := ConnInfo{Addr: laddr, Conn: rconn}
+			conns.Store(laddr.String(), conninfo)
+
+			plog.Println("New UDP Redirect Connection from [%s]->[%s] redirect to [%s]->[%s].",
+				laddr.String(), lconn.LocalAddr().String(),
+				rconn.LocalAddr().String(), rconn.RemoteAddr().String())
+		}
+
+		PutDgramToQueue(queue, buf, n, rconn, dial)
 	}
-
-	PutDgramToQueue(queue, buf, n, rconn, dial)
-
-	return nil
 }
 
 func ReadMultiServer(lconn *net.UDPConn, queue *DgramQueue, conns *sync.Map) {
-
+	loop := true
 	buf := make([]byte, 65536)
 
-	for {
+	for loop {
 		conns.Range(func(key, value any) bool {
 			rconn := value.(ConnInfo).Conn
 			laddr := value.(ConnInfo).Addr
@@ -96,6 +110,7 @@ func ReadMultiServer(lconn *net.UDPConn, queue *DgramQueue, conns *sync.Map) {
 				plog.Println("Error : %s On UDP Redirect Connection from [%s]->[%s] redirect to [%s]->[%s].",
 					err.Error(), laddr.String(), lconn.LocalAddr().String(),
 					rconn.LocalAddr().String(), rconn.RemoteAddr().String())
+				loop = false
 				return false
 			}
 
@@ -130,6 +145,7 @@ func Write(lconn *net.UDPConn, queue *DgramQueue) {
 
 		if err != nil {
 			plog.Println("Write Udp : %s", err.Error())
+			return
 		}
 	}
 }

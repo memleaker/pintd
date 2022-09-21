@@ -31,6 +31,7 @@ type RedirectConfig struct {
 	RemoteAddr   string
 	SectionName  string
 	Denyaddr     []string
+	Admitaddr    []string
 }
 
 // read pintd and indirect config.
@@ -93,6 +94,22 @@ func ReadConfig(cfgfile string) *PintdConfig {
 
 		redirect.Denyaddr = section.Key("denyaddrs").Strings(",")
 		for _, addr := range redirect.Denyaddr {
+			before, after, ok := strings.Cut(addr, "/")
+			if ok {
+				addr = before
+				mask, _ := strconv.Atoi(after)
+				if mask <= 0 || mask > 32 {
+					log.Fatalln("Invalid Mask : ", after)
+				}
+			}
+
+			if ip := net.ParseIP(addr); ip == nil {
+				log.Fatalln("Invalid Addr : ", addr)
+			}
+		}
+
+		redirect.Admitaddr = section.Key("admitaddrs").Strings(",")
+		for _, addr := range redirect.Admitaddr {
 			before, after, ok := strings.Cut(addr, "/")
 			if ok {
 				addr = before
