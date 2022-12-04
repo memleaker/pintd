@@ -17,9 +17,10 @@ const (
 )
 
 type PintdConfig struct {
-	AppMode   string
-	LogFile   string
-	Redirects []*RedirectConfig
+	AppMode      string
+	LogFile      string
+	MaxOpenFiles uint64
+	Redirects    []*RedirectConfig
 }
 
 type RedirectConfig struct {
@@ -48,8 +49,10 @@ func ReadConfig(cfgfile string) *PintdConfig {
 	log.Println("Using Config File", cfgfile)
 
 	// read pintd config.
-	Pintdcf.AppMode = cf.Section("pintd").Key("AppMode").In("debug", []string{"debug", "release"})
-	Pintdcf.LogFile = cf.Section("pintd").Key("LogFile").MustString(LOGFILE)
+	Pintdcf.AppMode = cf.Section("pintd").Key("appmode").In("debug", []string{"debug", "release"})
+	Pintdcf.LogFile = cf.Section("pintd").Key("logfile").MustString(LOGFILE)
+	Pintdcf.MaxOpenFiles = cf.Section("pintd").Key("maxopenfiles").MustUint64(8192)
+
 	if Pintdcf.AppMode == DEBUGMODE {
 		log.Println("Pintd is Running On debug mode.")
 	}
@@ -59,9 +62,6 @@ func ReadConfig(cfgfile string) *PintdConfig {
 
 	for _, section := range childs {
 		redirect := new(RedirectConfig)
-		if redirect == nil {
-			log.Fatalln("Alloc structure RedirectConfig Failed.")
-		}
 
 		redirect.LocalAddr = section.Key("localaddr").MustString("0.0.0.0")
 		if addr := net.ParseIP(redirect.LocalAddr); addr == nil {

@@ -22,10 +22,13 @@ pintd -c xxx        指定配置文件, 默认为: pintd.ini.
 ```html
 [pintd]             
 # 选择debug或release模式           
-AppMode = debug                  
+appmode = debug                  
 
 # 日志文件路径 (默认为: "/var/log/pintd.log").
-LogFile = /var/log/pintd.log     
+logfile = /var/log/pintd.log     
+
+# 最大可打开文件数量
+maxopenfiles = 8192
 ```
 
 #### 重定向配置

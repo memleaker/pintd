@@ -15,7 +15,7 @@ type Listener struct {
 
 var listeners = make(map[string]Listener, 0)
 
-func CreateListener(cfg *config.PintdConfig) {
+func InitListeners(cfg *config.PintdConfig) {
 	var (
 		err      error
 		listener net.Listener

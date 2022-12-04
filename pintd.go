@@ -2,30 +2,45 @@ package main
 
 import (
 	"flag"
+	"log"
 	"pintd/config"
 	"pintd/core"
 	"pintd/filter"
 	"pintd/plog"
+	"syscall"
 )
 
 func main() {
 
+	// arguments
 	cfgfile := flag.String("c", config.CONFIGFILE, "use -c to specific [config file]")
-
 	flag.Parse()
 
 	// read config.
 	cfg := config.ReadConfig(*cfgfile)
 
+	// init system, ulmits, signals
+	// golang don't need ignore SIGPIPE, but write return EPIPE
+	InitSystem(cfg)
+
 	// init log module.
 	plog.InitLog(cfg)
 
-	// init deny rules.
+	// init rules.
 	filter.InitFilter(cfg)
 
-	// create listener.
-	core.CreateListener(cfg)
+	// create listeners.
+	core.InitListeners(cfg)
 
 	// listen and running...
 	core.HandleConns(cfg)
+}
+
+func InitSystem(cfg *config.PintdConfig) {
+
+	// set open fd numbers
+	rlim := syscall.Rlimit{Cur: cfg.MaxOpenFiles, Max: cfg.MaxOpenFiles}
+	if err := syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rlim); err != nil {
+		log.Fatalln("Set resources limit failed : " + err.Error())
+	}
 }
