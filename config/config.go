@@ -91,6 +91,9 @@ func ReadConfig(cfgfile string) *PintdConfig {
 		}
 
 		redirect.MaxRedirects = section.Key("maxredirects").MustInt(100)
+		if redirect.MaxRedirects < 0 {
+			log.Fatalln("Invalid MaxRedirects Setting (should bigger than 0)")
+		}
 
 		redirect.Denyaddr = section.Key("denyaddrs").Strings(",")
 		for _, addr := range redirect.Denyaddr {
