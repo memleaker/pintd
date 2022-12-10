@@ -17,13 +17,14 @@ type ConnInfo struct {
 }
 
 func HandleUdpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitGroup) {
-	defer wg.Done()
-	defer listener.udpconn.Close()
 	defer func() {
 		if err := recover(); err != nil {
 			plog.Println(fmt.Sprint(err))
 		}
 	}()
+
+	defer wg.Done()
+	defer listener.udpconn.Close()
 
 	var (
 		conns sync.Map
@@ -73,7 +74,9 @@ func HandleUdpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 
 			go UdpRightToLeft(listener.udpconn, rconn, laddr, &conns)
 
-			plog.Println("New UDP Redirect Connection from [%s]->[%s] redirect to [%s]->[%s].",
+			// warn: dont's use lconn.RemoteAddr().String()
+			// because it's null
+			plog.Println("New UDP Redirect Connection [%s]->[%s] redirect [%s]->[%s].",
 				laddr.String(), listener.udpconn.LocalAddr().String(),
 				rconn.LocalAddr().String(), rconn.RemoteAddr().String())
 		}
@@ -85,25 +88,38 @@ func HandleUdpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 }
 
 func UdpRightToLeft(lconn, rconn *net.UDPConn, laddr *net.UDPAddr, conns *sync.Map) {
-	buf := make([]byte, 65536)
+	defer func() {
+		if err := recover(); err != nil {
+			plog.Println(fmt.Sprint(err))
+		}
+	}()
 
 	defer conns.Delete(laddr.String())
 	defer rconn.Close()
 
-	for {
-		n, err := rconn.Read(buf)
-		if err != nil {
-			// conn closed
-			if errors.Is(err, net.ErrClosed) {
-				return
-			}
+	var n int
+	var err error
+	var buf = make([]byte, 65536)
 
-			plog.Println("Error : %s On UDP Redirect Connection from [%s]->[%s] redirect to [%s]->[%s].",
-				err.Error(), laddr.String(), lconn.LocalAddr().String(),
-				rconn.LocalAddr().String(), rconn.RemoteAddr().String())
-			return
+	for {
+		n, err = rconn.Read(buf)
+		if err != nil {
+			break
 		}
 
-		lconn.WriteToUDP(buf[:n], laddr)
+		_, err = lconn.WriteToUDP(buf[:n], laddr)
+		if err != nil {
+			break
+		}
 	}
+
+	if err != nil && !errors.Is(err, net.ErrClosed) {
+		plog.Println("UDP Redirect Error : %s", err.Error())
+	}
+
+	// warn: dont's use lconn.RemoteAddr().String()
+	// because it's null
+	plog.Println("Destory UDP Redirect Connection [%s]->[%s] redirect [%s]->[%s].",
+		laddr.String(), lconn.LocalAddr().String(),
+		rconn.LocalAddr().String(), rconn.RemoteAddr().String())
 }

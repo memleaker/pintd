@@ -57,7 +57,7 @@ remoteport = 80
 # 最大重定向的连接数 (默认 100. 此项仅对TCP有效).
 maxredirects = 100
 
-# 是否设置无延迟 NODELAY
+# 是否设置无延迟 NODELAY (仅对TCP有效)
 nodelay = true
 
 # 黑名单，列出的IP将被禁止访问pintd. (使用 ',' 分割IP地址).
