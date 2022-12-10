@@ -47,16 +47,12 @@ func ReadConfig(cfgfile string) *PintdConfig {
 		log.Fatalln("Read Config Failed :", err.Error())
 	}
 
-	log.Println("Using Config File", cfgfile)
+	log.Println("Parsing Config File...", cfgfile)
 
 	// read pintd config.
 	Pintdcf.AppMode = cf.Section("pintd").Key("appmode").In("debug", []string{"debug", "release"})
 	Pintdcf.LogFile = cf.Section("pintd").Key("logfile").MustString(LOGFILE)
 	Pintdcf.MaxOpenFiles = cf.Section("pintd").Key("maxopenfiles").MustUint64(8192)
-
-	if Pintdcf.AppMode == DEBUGMODE {
-		log.Println("Pintd is Running On debug mode.")
-	}
 
 	// read port redirect config.
 	childs := cf.Section("redirect").ChildSections()
@@ -66,7 +62,12 @@ func ReadConfig(cfgfile string) *PintdConfig {
 
 		redirect.LocalAddr = section.Key("localaddr").MustString("0.0.0.0")
 		if addr := net.ParseIP(redirect.LocalAddr); addr == nil {
-			log.Fatalln("Invalid Addr : ", redirect.LocalAddr)
+			ip, err := net.LookupIP(redirect.LocalAddr)
+			if err != nil {
+				log.Fatalln("Invalid Domain or Ip Address : ", redirect.LocalAddr)
+			}
+
+			redirect.LocalAddr = ip[0].String()
 		}
 
 		redirect.LocalPort = section.Key("localport").MustInt(8888)
@@ -76,7 +77,12 @@ func ReadConfig(cfgfile string) *PintdConfig {
 
 		redirect.RemoteAddr = section.Key("remoteaddr").MustString("127.0.0.1")
 		if addr := net.ParseIP(redirect.RemoteAddr); addr == nil {
-			log.Fatalln("Invalid Addr : ", redirect.RemoteAddr)
+			ip, err := net.LookupIP(redirect.RemoteAddr)
+			if err != nil {
+				log.Fatalln("Invalid Domain or Ip Address : ", redirect.RemoteAddr)
+			}
+
+			redirect.RemoteAddr = ip[0].String()
 		}
 
 		redirect.RemorePort = section.Key("remoteport").MustInt(9999)
@@ -131,6 +137,12 @@ func ReadConfig(cfgfile string) *PintdConfig {
 		}
 
 		Pintdcf.Redirects = append(Pintdcf.Redirects, redirect)
+	}
+
+	log.Println("Parsing Config Success")
+
+	if Pintdcf.AppMode == DEBUGMODE {
+		log.Println("Pintd is Running On debug mode.")
 	}
 
 	return &Pintdcf
