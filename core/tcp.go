@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"pintd/config"
@@ -17,6 +18,11 @@ func HandleTcpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 
 	defer wg.Done()
 	defer listener.listener.Close()
+	defer func() {
+		if err := recover(); err != nil {
+			plog.Println(fmt.Sprint(err))
+		}
+	}()
 
 	conns := make(chan bool, cfg.MaxRedirects)
 
@@ -57,6 +63,11 @@ func DialToRemote(lconn net.Conn, cfg *config.RedirectConfig, conns chan bool) {
 
 	// decrease conn number
 	defer func() { <-conns }()
+	defer func() {
+		if err := recover(); err != nil {
+			plog.Println(fmt.Sprint(err))
+		}
+	}()
 
 	// dial to remote
 	rconn, err := net.DialTimeout("tcp", cfg.RemoteAddr+":"+strconv.Itoa(cfg.RemorePort),
@@ -78,9 +89,7 @@ func DialToRemote(lconn net.Conn, cfg *config.RedirectConfig, conns chan bool) {
 }
 
 func HandleTcpData(lconn, rconn net.Conn, conns chan bool, cfg *config.RedirectConfig) {
-	var (
-		wg sync.WaitGroup
-	)
+	var wg sync.WaitGroup
 
 	plog.Println("New TCP Redirect Connection [%s]<->[%s] redirect [%s]<->[%s].",
 		lconn.RemoteAddr().String(), lconn.LocalAddr().String(),

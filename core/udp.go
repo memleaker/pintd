@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"pintd/config"
 	"pintd/filter"
@@ -18,6 +19,11 @@ type ConnInfo struct {
 func HandleUdpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer listener.udpconn.Close()
+	defer func() {
+		if err := recover(); err != nil {
+			plog.Println(fmt.Sprint(err))
+		}
+	}()
 
 	var (
 		conns sync.Map
