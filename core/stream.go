@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"net"
 )
 
@@ -52,8 +51,6 @@ func (stream *RingStream) StreamRead(conn net.Conn) error {
 
 	stream.In += uint32(n)
 
-	fmt.Println("In ", stream.In, "Out ", stream.Out)
-
 	return err
 }
 
@@ -68,8 +65,6 @@ func (stream *RingStream) StreamWrite(conn net.Conn) error {
 	n, err := conn.Write(stream.buffer[outpos : outpos+len])
 
 	stream.Out += uint32(n)
-
-	fmt.Println("write")
 
 	return err
 }

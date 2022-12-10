@@ -15,14 +15,14 @@ import (
 )
 
 func HandleTcpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitGroup) {
-
-	defer wg.Done()
-	defer listener.listener.Close()
 	defer func() {
 		if err := recover(); err != nil {
 			plog.Println(fmt.Sprint(err))
 		}
 	}()
+
+	defer wg.Done()
+	defer listener.listener.Close()
 
 	conns := make(chan bool, cfg.MaxRedirects)
 
@@ -60,14 +60,14 @@ func HandleTcpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 }
 
 func DialToRemote(lconn net.Conn, cfg *config.RedirectConfig, conns chan bool) {
-
-	// decrease conn number
-	defer func() { <-conns }()
 	defer func() {
 		if err := recover(); err != nil {
 			plog.Println(fmt.Sprint(err))
 		}
 	}()
+
+	// decrease conn number
+	defer func() { <-conns }()
 
 	// dial to remote
 	rconn, err := net.DialTimeout("tcp", cfg.RemoteAddr+":"+strconv.Itoa(cfg.RemorePort),
@@ -136,6 +136,12 @@ func Redirect(lconn, rconn net.Conn, wg *sync.WaitGroup) {
 }
 
 func LeftRead(lconn, rconn net.Conn, lstream *RingStream, lchan chan bool, wg *sync.WaitGroup) {
+	defer func() {
+		if err := recover(); err != nil {
+			plog.Println(fmt.Sprint(err))
+		}
+	}()
+
 	defer wg.Done()
 	defer lconn.Close()
 	defer rconn.Close()
@@ -144,6 +150,12 @@ func LeftRead(lconn, rconn net.Conn, lstream *RingStream, lchan chan bool, wg *s
 }
 
 func RightRead(lconn, rconn net.Conn, rstream *RingStream, rchan chan bool, wg *sync.WaitGroup) {
+	defer func() {
+		if err := recover(); err != nil {
+			plog.Println(fmt.Sprint(err))
+		}
+	}()
+
 	defer wg.Done()
 	defer lconn.Close()
 	defer rconn.Close()
@@ -175,6 +187,12 @@ func RedirectRead(conn net.Conn, ch chan bool, stream *RingStream) {
 }
 
 func LeftWrite(lconn, rconn net.Conn, rstream *RingStream, rchan chan bool, wg *sync.WaitGroup) {
+	defer func() {
+		if err := recover(); err != nil {
+			plog.Println(fmt.Sprint(err))
+		}
+	}()
+
 	defer wg.Done()
 	defer lconn.Close()
 	defer rconn.Close()
@@ -183,6 +201,12 @@ func LeftWrite(lconn, rconn net.Conn, rstream *RingStream, rchan chan bool, wg *
 }
 
 func RightWrite(lconn, rconn net.Conn, lstream *RingStream, lchan chan bool, wg *sync.WaitGroup) {
+	defer func() {
+		if err := recover(); err != nil {
+			plog.Println(fmt.Sprint(err))
+		}
+	}()
+
 	defer wg.Done()
 	defer lconn.Close()
 	defer rconn.Close()
@@ -209,6 +233,12 @@ func RedirectWrite(conn net.Conn, ch chan bool, stream *RingStream) {
 }
 
 func RedirectIo(lconn, rconn net.Conn, wg *sync.WaitGroup) {
+
+	defer func() {
+		if err := recover(); err != nil {
+			plog.Println(fmt.Sprint(err))
+		}
+	}()
 	defer wg.Done()
 	defer lconn.Close()
 	defer rconn.Close()
