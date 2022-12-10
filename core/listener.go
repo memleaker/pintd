@@ -13,13 +13,12 @@ type Listener struct {
 	udpconn  *net.UDPConn // for udp
 }
 
-var listeners = make(map[string]Listener, 0)
-
-func InitListeners(cfg *config.PintdConfig) {
+func InitListeners(cfg *config.PintdConfig) map[string]Listener {
 	var (
-		err      error
-		listener net.Listener
-		udpconn  *net.UDPConn
+		err       error
+		listener  net.Listener
+		udpconn   *net.UDPConn
+		listeners = make(map[string]Listener, 0)
 	)
 
 	for _, redirect := range cfg.Redirects {
@@ -41,9 +40,11 @@ func InitListeners(cfg *config.PintdConfig) {
 			listeners[redirect.SectionName] = Listener{nil, udpconn}
 		}
 	}
+
+	return listeners
 }
 
-func HandleConns(cfg *config.PintdConfig) {
+func HandleConns(cfg *config.PintdConfig, listeners map[string]Listener) {
 	var wg sync.WaitGroup
 
 	for _, redirect := range cfg.Redirects {

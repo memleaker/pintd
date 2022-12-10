@@ -19,9 +19,9 @@ func main() {
 	// read config.
 	cfg := config.ReadConfig(*cfgfile)
 
-	// init system, ulmits, signals
+	// init system, ulmits
 	// golang don't need ignore SIGPIPE, but write return EPIPE
-	InitSystem(cfg)
+	SetSystem(cfg)
 
 	// init log module.
 	plog.InitLog(cfg)
@@ -30,13 +30,13 @@ func main() {
 	filter.InitFilter(cfg)
 
 	// create listeners.
-	core.InitListeners(cfg)
+	listeners := core.InitListeners(cfg)
 
 	// listen and running...
-	core.HandleConns(cfg)
+	core.HandleConns(cfg, listeners)
 }
 
-func InitSystem(cfg *config.PintdConfig) {
+func SetSystem(cfg *config.PintdConfig) {
 
 	// set open fd numbers
 	rlim := syscall.Rlimit{Cur: cfg.MaxOpenFiles, Max: cfg.MaxOpenFiles}

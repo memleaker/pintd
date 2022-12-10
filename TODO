@@ -1,3 +1,1 @@
-1. Support Reload Config.
-2. Panic Handle, close connections and output error message to log when panic occurs.
-3. Support Domin name.
+Reload Config
