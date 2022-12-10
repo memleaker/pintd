@@ -123,75 +123,86 @@ func Redirect(lconn, rconn net.Conn, wg *sync.WaitGroup) {
 	lstream := NewRingStream()
 	rstream := NewRingStream()
 
-	go LeftRead(lconn, rconn, lstream, wg)
-	go RightWrite(lconn, rconn, lstream, wg)
+	lchan := make(chan bool)
+	rchan := make(chan bool)
 
-	go RightRead(lconn, rconn, rstream, wg)
-	go LeftWrite(lconn, rconn, rstream, wg)
+	go LeftRead(lconn, rconn, lstream, lchan, wg)
+	go RightWrite(lconn, rconn, lstream, lchan, wg)
+
+	go RightRead(lconn, rconn, rstream, rchan, wg)
+	go LeftWrite(lconn, rconn, rstream, rchan, wg)
 
 	wg.Add(4)
 }
 
-func LeftRead(lconn, rconn net.Conn, lstream *RingStream, wg *sync.WaitGroup) {
+func LeftRead(lconn, rconn net.Conn, lstream *RingStream, lchan chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer lconn.Close()
 	defer rconn.Close()
 
-	RedirectRead(lconn, lstream)
+	RedirectRead(lconn, lchan, lstream)
 }
 
-func RightRead(lconn, rconn net.Conn, rstream *RingStream, wg *sync.WaitGroup) {
+func RightRead(lconn, rconn net.Conn, rstream *RingStream, rchan chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer lconn.Close()
 	defer rconn.Close()
 
-	RedirectRead(rconn, rstream)
+	RedirectRead(rconn, rchan, rstream)
 }
 
-func RedirectRead(conn net.Conn, stream *RingStream) {
+func RedirectRead(conn net.Conn, ch chan bool, stream *RingStream) {
 	var err error
+
+	defer close(ch)
 
 	for {
 		err = stream.StreamRead(conn)
 		if err != nil {
 			break
 		}
+
+		select {
+		case ch <- true:
+		default:
+		}
 	}
 
-	if !errors.Is(err, net.ErrClosed) &&
+	if err != nil && !errors.Is(err, net.ErrClosed) &&
 		err != io.EOF && err != io.ErrClosedPipe {
 		plog.Println("Tcp Redirect Error : %s", err.Error())
 	}
 }
 
-func LeftWrite(lconn, rconn net.Conn, rstream *RingStream, wg *sync.WaitGroup) {
+func LeftWrite(lconn, rconn net.Conn, rstream *RingStream, rchan chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer lconn.Close()
 	defer rconn.Close()
 
-	RedirectWrite(lconn, rstream)
+	RedirectWrite(lconn, rchan, rstream)
 }
 
-func RightWrite(lconn, rconn net.Conn, lstream *RingStream, wg *sync.WaitGroup) {
+func RightWrite(lconn, rconn net.Conn, lstream *RingStream, lchan chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer lconn.Close()
 	defer rconn.Close()
 
-	RedirectWrite(rconn, lstream)
+	RedirectWrite(rconn, lchan, lstream)
 }
 
-func RedirectWrite(conn net.Conn, stream *RingStream) {
-
+func RedirectWrite(conn net.Conn, ch chan bool, stream *RingStream) {
 	var err error
 
-	for {
+	// <-ch block wait read
+	// and when read routine closed ch, our loop stop and return
+	for !stream.IsEmpty() || <-ch {
 		err = stream.StreamWrite(conn)
 		if err != nil {
 			break
 		}
 	}
 
-	if !errors.Is(err, net.ErrClosed) &&
+	if err != nil && !errors.Is(err, net.ErrClosed) &&
 		err != io.EOF && err != io.ErrClosedPipe {
 		plog.Println("Tcp Redirect Error : %s", err.Error())
 	}
@@ -229,7 +240,7 @@ func RedirectIo(lconn, rconn net.Conn, wg *sync.WaitGroup) {
 	//   goroutine before IO is complate.
 	// io.EOF : Read EOF, no more input is available
 	// io.ErrClosedPipe : read or write on a closed pipe
-	if !errors.Is(err, net.ErrClosed) &&
+	if err != nil && !errors.Is(err, net.ErrClosed) &&
 		err != io.EOF && err != io.ErrClosedPipe {
 		plog.Println("Tcp Redirect Error : %s", err.Error())
 	}
