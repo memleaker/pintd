@@ -27,6 +27,7 @@ type RedirectConfig struct {
 	LocalPort    int
 	RemorePort   int
 	MaxRedirects int
+	NoDelay      bool
 	Protocol     string
 	LocalAddr    string
 	RemoteAddr   string
@@ -94,6 +95,8 @@ func ReadConfig(cfgfile string) *PintdConfig {
 		if redirect.MaxRedirects < 0 {
 			log.Fatalln("Invalid MaxRedirects Setting (should bigger than 0)")
 		}
+
+		redirect.NoDelay = section.Key("nodelay").MustBool(false)
 
 		redirect.Denyaddr = section.Key("denyaddrs").Strings(",")
 		for _, addr := range redirect.Denyaddr {

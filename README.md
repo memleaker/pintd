@@ -55,11 +55,22 @@ remoteaddr = 127.0.0.1
 remoteport = 80       
 
 # 最大重定向的连接数 (默认 100. 此项仅对TCP有效).
-maxredirects = 100    
+maxredirects = 100
+
+# 是否设置无延迟 NODELAY
+nodelay = true
 
 # 黑名单，列出的IP将被禁止访问pintd. (使用 ',' 分割IP地址).
 denyaddrs = 123.34.77.0/24, 127.0.0.1
 
 # 白名单, 将只允许列出的IP访问, 允许黑名单和白名单混合使用
 admitaddrs = 221.0.0.0/8, 127.0.0.1
+```
+
+## 重载配置
+
+重载配置不会影响已经建立的连接
+
+```
+pintd reload
 ```

@@ -18,9 +18,9 @@ func HandleTcpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 	defer wg.Done()
 	defer listener.listener.Close()
 
-	ch := make(chan bool, cfg.MaxRedirects)
+	conns := make(chan bool, cfg.MaxRedirects)
 
-	// Wait Connection coming.
+	// Wait tcp connection coming.
 	for {
 		lconn, err := listener.listener.Accept()
 		if err != nil {
@@ -28,11 +28,20 @@ func HandleTcpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 			return
 		}
 
-		// filter address
+		// Limit ip address
 		ip, _, _ := strings.Cut(lconn.RemoteAddr().String(), ":")
-		if deny := filter.DenyAccess(ip, cfg.SectionName); deny {
+		if filter.DenyAccess(ip, cfg.SectionName) {
 			lconn.Close()
 			plog.Println("Matched Deny Address : %s.", ip)
+			continue
+		}
+
+		// Limit the number of connections
+		select {
+		case conns <- true:
+		default:
+			lconn.Close()
+			plog.Println("Connection Limit to %d, Closed Connection.", cfg.MaxRedirects)
 			continue
 		}
 
@@ -40,11 +49,16 @@ func HandleTcpConn(listener Listener, cfg *config.RedirectConfig, wg *sync.WaitG
 			lconn.RemoteAddr().String())
 
 		// Dial to remote.
-		go DialToRemote(lconn, cfg, ch)
+		go DialToRemote(lconn, cfg, conns)
 	}
 }
 
-func DialToRemote(lconn net.Conn, cfg *config.RedirectConfig, ch chan bool) {
+func DialToRemote(lconn net.Conn, cfg *config.RedirectConfig, conns chan bool) {
+
+	// decrease conn number
+	defer func() { <-conns }()
+
+	// dial to remote
 	rconn, err := net.DialTimeout("tcp", cfg.RemoteAddr+":"+strconv.Itoa(cfg.RemorePort),
 		time.Second*time.Duration(3))
 	if err != nil {
@@ -55,109 +69,168 @@ func DialToRemote(lconn net.Conn, cfg *config.RedirectConfig, ch chan bool) {
 
 	plog.Println("Tcp Dial to %s Success.", rconn.RemoteAddr().String())
 
-	// check connections number.
-	select {
-	case ch <- true:
-	default:
-		lconn.Close()
-		rconn.Close()
-		plog.Println("Connection Limit to %d, Closed Connection.", cfg.MaxRedirects)
-		return
-	}
-
-	// set tcp keepalive
+	// set tcp keepalive 60 seconds
 	SetTcpKeepalive(lconn, 60)
 	SetTcpKeepalive(rconn, 60)
 
 	// handle data.
-	HandleTcpData(lconn, rconn, ch)
+	HandleTcpData(lconn, rconn, conns, cfg)
 }
 
-func HandleTcpData(lconn, rconn net.Conn, ch chan bool) {
+func HandleTcpData(lconn, rconn net.Conn, conns chan bool, cfg *config.RedirectConfig) {
 	var (
-		wg      sync.WaitGroup
-		lstream = NewStream()
-		rstream = NewStream()
+		wg sync.WaitGroup
 	)
 
-	plog.Println("New TCP Redirect Connection from [%s]->[%s] redirect to [%s]->[%s].",
+	plog.Println("New TCP Redirect Connection [%s]<->[%s] redirect [%s]<->[%s].",
 		lconn.RemoteAddr().String(), lconn.LocalAddr().String(),
 		rconn.LocalAddr().String(), rconn.RemoteAddr().String())
 
-	go LeftToRight(lconn, rconn, lstream, rstream, &wg)
-	go RightToLeft(lconn, rconn, lstream, rstream, &wg)
+	SetTcpNodelay(lconn, cfg.NoDelay)
+	SetTcpNodelay(rconn, cfg.NoDelay)
 
-	wg.Add(2)
+	if cfg.NoDelay {
+		RedirectNodelay(lconn, rconn, &wg)
+	} else {
+		Redirect(lconn, rconn, &wg)
+	}
+
 	wg.Wait()
 
-	plog.Println("Destory TCP Redirect Connection from [%s]->[%s] redirect to [%s]->[%s].",
+	plog.Println("Destory TCP Redirect Connection [%s]<->[%s] redirect [%s]<->[%s].",
 		lconn.RemoteAddr().String(), lconn.LocalAddr().String(),
 		rconn.LocalAddr().String(), rconn.RemoteAddr().String())
-
-	// decrease channel.
-	<-ch
 }
 
-func LeftToRight(lconn, rconn net.Conn, lstream, rstream *Stream, wg *sync.WaitGroup) {
-	var err error
+func RedirectNodelay(lconn, rconn net.Conn, wg *sync.WaitGroup) {
 
+	go RedirectIo(lconn, rconn, wg)
+	go RedirectIo(rconn, lconn, wg)
+
+	wg.Add(2)
+}
+
+func Redirect(lconn, rconn net.Conn, wg *sync.WaitGroup) {
+	lstream := NewRingStream()
+	rstream := NewRingStream()
+
+	go LeftRead(lconn, rconn, lstream, wg)
+	go RightWrite(lconn, rconn, lstream, wg)
+
+	go RightRead(lconn, rconn, rstream, wg)
+	go LeftWrite(lconn, rconn, rstream, wg)
+
+	wg.Add(4)
+}
+
+func LeftRead(lconn, rconn net.Conn, lstream *RingStream, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer lconn.Close()
 	defer rconn.Close()
 
-	for {
-		if err = StreamRead(lconn, lstream); err != nil {
-			// Send residual data
-			StreamWrite(rconn, lstream)
-			goto ERR
-		}
-
-		if err = StreamWrite(rconn, lstream); err != nil {
-			goto ERR
-		}
-	}
-
-ERR:
-	if err != nil && !errors.Is(err, net.ErrClosed) &&
-		err != io.EOF && err != io.ErrClosedPipe {
-		plog.Println("Error : %s On TCP Redirect Connection from [%s]->[%s] redirect to [%s]->[%s].",
-			err.Error(),
-			lconn.RemoteAddr().String(), lconn.LocalAddr().String(),
-			rconn.LocalAddr().String(), rconn.RemoteAddr().String())
-	}
+	RedirectRead(lconn, lstream)
 }
 
-func RightToLeft(lconn, rconn net.Conn, lstream, rstream *Stream, wg *sync.WaitGroup) {
-	var err error
-
+func RightRead(lconn, rconn net.Conn, rstream *RingStream, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer lconn.Close()
 	defer rconn.Close()
 
-	for {
-		if err = StreamRead(rconn, rstream); err != nil {
-			// Send residual data
-			StreamWrite(lconn, rstream)
-			goto ERR
-		}
+	RedirectRead(rconn, rstream)
+}
 
-		if err = StreamWrite(lconn, rstream); err != nil {
-			goto ERR
+func RedirectRead(conn net.Conn, stream *RingStream) {
+	var err error
+
+	for {
+		err = stream.StreamRead(conn)
+		if err != nil {
+			break
 		}
 	}
 
-ERR:
-	if err != nil && !errors.Is(err, net.ErrClosed) &&
+	if !errors.Is(err, net.ErrClosed) &&
 		err != io.EOF && err != io.ErrClosedPipe {
-		plog.Println("Error : %s On TCP Redirect Connection from [%s]->[%s] redirect to [%s]->[%s].",
-			err.Error(),
-			lconn.RemoteAddr().String(), lconn.LocalAddr().String(),
-			rconn.LocalAddr().String(), rconn.RemoteAddr().String())
+		plog.Println("Tcp Redirect Error : %s", err.Error())
+	}
+}
+
+func LeftWrite(lconn, rconn net.Conn, rstream *RingStream, wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer lconn.Close()
+	defer rconn.Close()
+
+	RedirectWrite(lconn, rstream)
+}
+
+func RightWrite(lconn, rconn net.Conn, lstream *RingStream, wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer lconn.Close()
+	defer rconn.Close()
+
+	RedirectWrite(rconn, lstream)
+}
+
+func RedirectWrite(conn net.Conn, stream *RingStream) {
+
+	var err error
+
+	for {
+		err = stream.StreamWrite(conn)
+		if err != nil {
+			break
+		}
+	}
+
+	if !errors.Is(err, net.ErrClosed) &&
+		err != io.EOF && err != io.ErrClosedPipe {
+		plog.Println("Tcp Redirect Error : %s", err.Error())
+	}
+}
+
+func RedirectIo(lconn, rconn net.Conn, wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer lconn.Close()
+	defer rconn.Close()
+
+	var (
+		err error
+		n   int
+		buf = make([]byte, BUFFERSZ)
+	)
+
+	for {
+		n, err = lconn.Read(buf)
+		if err != nil {
+			// Send residual data
+			rconn.Write(buf[:n])
+			break
+		}
+
+		// conn.Write will block wait until all data copid to kernel
+		// so we dont't need stream or ringbuffer to cache data
+		// unless set deadline, conn.SetDeadline()
+		_, err = rconn.Write(buf[:n])
+		if err != nil {
+			break
+		}
+	}
+
+	// net.ErrClosed : IO call on a closed network conn or closed by another
+	//   goroutine before IO is complate.
+	// io.EOF : Read EOF, no more input is available
+	// io.ErrClosedPipe : read or write on a closed pipe
+	if !errors.Is(err, net.ErrClosed) &&
+		err != io.EOF && err != io.ErrClosedPipe {
+		plog.Println("Tcp Redirect Error : %s", err.Error())
 	}
 }
 
 func SetTcpKeepalive(conn net.Conn, secs int) error {
-	tconn := conn.(*net.TCPConn)
+	tconn, ok := conn.(*net.TCPConn)
+	if !ok {
+		return errors.New("invalid argument")
+	}
 
 	if err := tconn.SetKeepAlive(true); err != nil {
 		return err
@@ -168,4 +241,13 @@ func SetTcpKeepalive(conn net.Conn, secs int) error {
 	}
 
 	return nil
+}
+
+func SetTcpNodelay(conn net.Conn, delay bool) error {
+	tconn, ok := conn.(*net.TCPConn)
+	if !ok {
+		return errors.New("invalid argument")
+	}
+
+	return tconn.SetNoDelay(delay)
 }

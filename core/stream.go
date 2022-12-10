@@ -1,61 +1,78 @@
 package core
 
 import (
+	"fmt"
 	"net"
 )
 
 const (
-	BUFFERSZ = 655360
+	// BUFFERSZ = 524288 // 2 ^ 19
+	BUFFERSZ = 16
 )
 
-type Stream struct {
-	Head   int
-	Tail   int
+type RingStream struct {
+	In     uint32
+	Out    uint32
+	Size   uint32
 	buffer [BUFFERSZ]byte
 }
 
-func NewStream() *Stream {
-	return &Stream{
-		Head: 0,
-		Tail: 0,
+func NewRingStream() *RingStream {
+	return &RingStream{
+		In:   0,
+		Out:  0,
+		Size: BUFFERSZ,
 	}
 }
 
-func StreamRead(conn net.Conn, stream *Stream) error {
-	if stream.Tail == BUFFERSZ {
+func (stream *RingStream) IsFull() bool {
+	return ((stream.In - stream.Out) == stream.Size)
+}
+
+func (stream *RingStream) IsEmpty() bool {
+	return (stream.In == stream.Out)
+}
+
+func (stream *RingStream) StreamRead(conn net.Conn) error {
+	if stream.IsFull() {
 		return nil
 	}
 
-	n, err := conn.Read(stream.buffer[stream.Tail:])
-	if err != nil {
-		stream.Tail += n
-		return err
+	inpos := stream.In & (stream.Size - 1)
+	outpos := stream.Out & (stream.Size - 1)
+	end := stream.Size
+
+	if inpos < outpos {
+		end = outpos
 	}
 
-	stream.Tail += n
+	n, err := conn.Read(stream.buffer[inpos:end])
 
-	return nil
+	stream.In += uint32(n)
+
+	fmt.Println("recv ", n, "In", stream.In, "Out", stream.Out)
+
+	return err
 }
 
-func StreamWrite(conn net.Conn, stream *Stream) error {
-	tail := stream.Tail
-
-	for stream.Head != tail {
-		n, err := conn.Write(stream.buffer[stream.Head:tail])
-		if err != nil {
-			// even write timeout, n may bigger than 0.
-			stream.Head += n
-			return err
-		}
-
-		stream.Head += n
+func (stream *RingStream) StreamWrite(conn net.Conn) error {
+	if stream.IsEmpty() {
+		return nil
 	}
 
-	// write all data ok, reset buffer.
-	if tail == BUFFERSZ {
-		stream.Head = 0
-		stream.Tail = 0
+	inpos := stream.In & (stream.Size - 1)
+	outpos := stream.Out & (stream.Size - 1)
+	end := stream.Size
+
+	if inpos >= outpos {
+		end = inpos
 	}
 
-	return nil
+	n, err := conn.Write(stream.buffer[outpos:end])
+
+	stream.Out += uint32(n)
+
+	fmt.Println("w", n, "Out", stream.Out)
+
+	return err
 }
